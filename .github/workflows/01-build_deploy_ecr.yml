@@ -33,7 +33,7 @@ jobs:
         
     - name: Build application
       working-directory: application
-      run: ./mvnw clean package
+      run: mvn clean package
       
     - name: Create Docker image tag
       id: dockerImageTag
