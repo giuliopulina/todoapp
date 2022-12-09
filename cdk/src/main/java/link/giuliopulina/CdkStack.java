@@ -76,6 +76,7 @@ public class CdkStack extends Stack {
                         .desiredCount(1)
                         .taskImageOptions(ApplicationLoadBalancedTaskImageOptions.builder()
                                 .image(image)
+                                .containerPort(8080)
                                 .build())
                         .redirectHttp(true)
                         .build());
