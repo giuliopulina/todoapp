@@ -1,0 +1,17 @@
+{
+  "name": "todo-app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "ecr-registry:deploy": "cdk deploy --app \"./mvnw -e -q clean compile exec:java -Dexec.mainClass=link.giuliopulina.EcrRepositoryApp\" --require-approval never",
+    "ecr-registry:destroy": "cdk destroy --app \"./mvnw -e -q clean compile exec:java -Dexec.mainClass=link.giuliopulina.EcrRepositoryApp\" --force --require-approval never",
+    "app:deploy": "cdk deploy --app \"./mvnw -e -q clean compile exec:java -Dexec.mainClass=link.giuliopulina.CdkApp\" --require-approval never",
+    "app:destroy": "cdk destroy --app \"./mvnw -e -q clean compile exec:java -Dexec.mainClass=link.giuliopulina.CdkApp\" --force --require-approval never"
+  },
+  "devDependencies": {
+    "aws-cdk": "2.53.0"
+  },
+  "engines": {
+    "node": ">=16"
+  }
+}
