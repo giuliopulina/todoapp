@@ -63,10 +63,11 @@ jobs:
         ECR_REPOSITORY: todo-app
         DOCKER_IMAGE_TAG: ${{ steps.dockerImageTag.outputs.tag }}
       run: |
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:${DOCKER_IMAGE_TAG} .
-        docker tag $ECR_REGISTRY/$ECR_REPOSITORY:${DOCKER_IMAGE_TAG}
-        docker tag $ECR_REGISTRY/$ECR_REPOSITORY:latest
+        docker build -t todo-app .
+        docker tag todo-app $ECR_REGISTRY/$ECR_REPOSITORY:${DOCKER_IMAGE_TAG}
+        docker tag todo-app $ECR_REGISTRY/$ECR_REPOSITORY:latest
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:${DOCKER_IMAGE_TAG}
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
         
     - name: Deploy app
       working-directory: cdk
