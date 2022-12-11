@@ -4,6 +4,7 @@ cloud:
       auto: false
     region:
       static: eu-west-2
+      auto: false
     instance:
       data:
         enabled: false
