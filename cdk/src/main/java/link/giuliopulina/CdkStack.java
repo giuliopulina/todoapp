@@ -10,10 +10,7 @@ import software.amazon.awscdk.services.ec2.VpcProps;
 import software.amazon.awscdk.services.ecr.IRepository;
 import software.amazon.awscdk.services.ecr.LifecycleRule;
 import software.amazon.awscdk.services.ecr.Repository;
-import software.amazon.awscdk.services.ecs.Cluster;
-import software.amazon.awscdk.services.ecs.ClusterProps;
-import software.amazon.awscdk.services.ecs.ContainerImage;
-import software.amazon.awscdk.services.ecs.RepositoryImage;
+import software.amazon.awscdk.services.ecs.*;
 import software.amazon.awscdk.services.ecs.patterns.*;
 import software.amazon.awscdk.services.elasticloadbalancingv2.ApplicationProtocol;
 import software.amazon.awscdk.services.iam.AccountPrincipal;
@@ -25,6 +22,8 @@ import software.amazon.awscdk.StackProps;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import static java.util.Collections.singletonList;
 
 
 public class CdkStack extends Stack {
@@ -38,6 +37,7 @@ public class CdkStack extends Stack {
 
         // Create the ECS Service
         Cluster cluster = new Cluster(this, "Ec2Cluster", ClusterProps.builder().vpc(vpc).build());
+        cluster.enableFargateCapacityProviders();
         cluster.applyRemovalPolicy(RemovalPolicy.DESTROY);
 
         IHostedZone hostedZone = HostedZone.fromLookup(this, "HostedZone", HostedZoneProviderProps.builder()
@@ -67,6 +67,12 @@ public class CdkStack extends Stack {
                 "FargateService",
                 ApplicationLoadBalancedFargateServiceProps.builder()
                         .cluster(cluster)
+                        .capacityProviderStrategies(
+                                singletonList(CapacityProviderStrategy.builder()
+                                        .capacityProvider("FARGATE_SPOT")
+                                        .weight(1)
+                                        .build()
+                                ))
                         .protocol(ApplicationProtocol.HTTPS)
                         .listenerPort(443)
                         .publicLoadBalancer(true)
