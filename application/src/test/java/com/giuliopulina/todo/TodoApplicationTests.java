@@ -11,12 +11,6 @@ import org.springframework.test.context.event.annotation.BeforeTestClass;
 @SpringBootTest
 class TodoApplicationTests {
 
-	@BeforeAll
-	public void setup() {
-		/* FIXME: hack to make test working on CI */
-		System.setProperty("aws.region", "eu-west-2");
-	}
-
 	@Test
 	void contextLoads() {
 	}
