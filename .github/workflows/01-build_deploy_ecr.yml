@@ -72,4 +72,4 @@ jobs:
         
     - name: Deploy app
       working-directory: cdk
-      run: npm run app:deploy
+      run: npm run app:deploy -- -c dockerImageTag=${{ steps.dockerImageTag.outputs.tag }}

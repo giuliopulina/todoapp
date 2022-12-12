@@ -18,23 +18,23 @@ public class CdkApp {
         Validations.requireNonEmpty(applicationName, "context variable 'applicationName' must not be null");
 
         String hostedZoneDomain = (String) app.getNode().tryGetContext("hostedZoneDomain");
-        Validations.requireNonEmpty(applicationName, "context variable 'hostedZoneDomain' must not be null");
+        Validations.requireNonEmpty(hostedZoneDomain, "context variable 'hostedZoneDomain' must not be null");
 
         String applicationDomain = (String) app.getNode().tryGetContext("applicationDomain");
-        Validations.requireNonEmpty(applicationName, "context variable 'applicationDomain' must not be null");
+        Validations.requireNonEmpty(applicationDomain, "context variable 'applicationDomain' must not be null");
 
         String dockerRepository = (String) app.getNode().tryGetContext("dockerRepositoryName");
-        Validations.requireNonEmpty(applicationName, "context variable 'dockerRepositoryName' must not be null");
+        Validations.requireNonEmpty(dockerRepository, "context variable 'dockerRepositoryName' must not be null");
 
         String dockerImageTag = (String) app.getNode().tryGetContext("dockerImageTag");
-        Validations.requireNonEmpty(applicationName, "context variable 'dockerImageTag' must not be null");
+        Validations.requireNonEmpty(dockerImageTag, "context variable 'dockerImageTag' must not be null");
 
         String loginPageDomainPrefix = (String) app.getNode().tryGetContext("loginPageDomainPrefix");
-        Validations.requireNonEmpty(applicationName, "context variable 'loginPageDomainPrefix' must not be null");
+        Validations.requireNonEmpty(loginPageDomainPrefix, "context variable 'loginPageDomainPrefix' must not be null");
 
         Environment awsEnvironment = makeEnv(accountId, region);
 
-        Parameters parameters = new Parameters(accountId, region, applicationName, hostedZoneDomain,
+        CdkParameters parameters = new CdkParameters(accountId, region, applicationName, hostedZoneDomain,
                 applicationDomain, loginPageDomainPrefix, dockerRepository, dockerImageTag);
 
         new CdkStack(app, "CdkStack", StackProps

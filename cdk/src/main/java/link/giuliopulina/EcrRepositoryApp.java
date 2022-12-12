@@ -15,27 +15,12 @@ public class EcrRepositoryApp {
         String region = (String) app.getNode().tryGetContext("region");
         Validations.requireNonEmpty(region, "context variable 'region' must not be null");
 
-        String applicationName = (String) app.getNode().tryGetContext("applicationName");
-        Validations.requireNonEmpty(applicationName, "context variable 'applicationName' must not be null");
-
-        String hostedZoneDomain = (String) app.getNode().tryGetContext("hostedZoneDomain");
-        Validations.requireNonEmpty(applicationName, "context variable 'hostedZoneDomain' must not be null");
-
-        String applicationDomain = (String) app.getNode().tryGetContext("applicationDomain");
-        Validations.requireNonEmpty(applicationName, "context variable 'applicationDomain' must not be null");
-
         String dockerRepository = (String) app.getNode().tryGetContext("dockerRepositoryName");
-        Validations.requireNonEmpty(applicationName, "context variable 'dockerRepositoryName' must not be null");
-
-        String dockerImageTag = (String) app.getNode().tryGetContext("dockerImageTag");
-
-        String loginPageDomainPrefix = (String) app.getNode().tryGetContext("loginPageDomainPrefix");
-        Validations.requireNonEmpty(applicationName, "context variable 'loginPageDomainPrefix' must not be null");
+        Validations.requireNonEmpty(dockerRepository, "context variable 'dockerRepositoryName' must not be null");
 
         Environment awsEnvironment = makeEnv(accountId, region);
 
-        Parameters parameters = new Parameters(accountId, region, applicationName, hostedZoneDomain,
-                applicationDomain, loginPageDomainPrefix, dockerRepository, dockerImageTag);
+        EcrRepositoryParameters parameters = new EcrRepositoryParameters(accountId, region, dockerRepository);
 
         new EcrRepositoryStack(app, "EcrRepositoryStack", StackProps
                 .builder()

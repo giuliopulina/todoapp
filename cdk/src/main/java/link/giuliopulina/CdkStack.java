@@ -18,7 +18,6 @@ import software.amazon.awscdk.services.route53.*;
 import software.constructs.Construct;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -27,7 +26,7 @@ import static java.util.Collections.singletonList;
 
 public class CdkStack extends Stack {
 
-    public CdkStack(final Construct scope, final String id, final StackProps props, final Parameters parameters) {
+    public CdkStack(final Construct scope, final String id, final StackProps props, final CdkParameters parameters) {
         super(scope, id, props);
 
         // Check this link to save costs bypassing NAT gateway creation
@@ -126,7 +125,7 @@ public class CdkStack extends Stack {
         fargateService.getService().applyRemovalPolicy(RemovalPolicy.DESTROY);
     }
 
-    private CognitoOutput setupCognito(Parameters parameters) {
+    private CognitoOutput setupCognito(CdkParameters parameters) {
 
         // FIXME: remove
         System.out.println(parameters);
