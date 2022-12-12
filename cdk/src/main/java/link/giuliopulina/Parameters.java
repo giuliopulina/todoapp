@@ -6,7 +6,6 @@ public record Parameters(
         String applicationName,
         String hostedZoneDomain,
         String applicationDomain,
-
         String loginPageDomainPrefix,
         String dockerRepositoryName,
         String dockerImageTag) { }

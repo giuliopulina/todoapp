@@ -127,6 +127,10 @@ public class CdkStack extends Stack {
     }
 
     private CognitoOutput setupCognito(Parameters parameters) {
+
+        // FIXME: remove
+        System.out.println(parameters);
+
         String applicationUrl = "https://" + parameters.applicationDomain();
 
         final UserPool userPool = UserPool.Builder.create(this, "userPool")
@@ -150,7 +154,7 @@ public class CdkStack extends Stack {
                         .build())
                 .build();
 
-        UserPoolClient userPoolClient = UserPoolClient.Builder.create(this, "userPoolClient")
+        final UserPoolClient userPoolClient = UserPoolClient.Builder.create(this, "userPoolClient")
                 .userPoolClientName(parameters.applicationName() + "-client")
                 .generateSecret(true)
                 .userPool(userPool)
@@ -168,7 +172,7 @@ public class CdkStack extends Stack {
                 .supportedIdentityProviders(singletonList(UserPoolClientIdentityProvider.COGNITO))
                 .build();
 
-        UserPoolDomain userPoolDomain = UserPoolDomain.Builder.create(this, "userPoolDomain")
+        final UserPoolDomain userPoolDomain = UserPoolDomain.Builder.create(this, "userPoolDomain")
                 .userPool(userPool)
                 .cognitoDomain(CognitoDomainOptions.builder()
                         .domainPrefix(parameters.loginPageDomainPrefix())
@@ -176,7 +180,6 @@ public class CdkStack extends Stack {
                 .build();
 
         String logoutUrl = String.format("https://%s.auth.%s.amazoncognito.com/logout", parameters.loginPageDomainPrefix(), parameters.region());
-
 
         return new CognitoOutput(userPool.getUserPoolId(), userPoolClient.getUserPoolClientId(), userPoolClient.getUserPoolClientSecret(), logoutUrl, userPool.getUserPoolProviderUrl());
     }
