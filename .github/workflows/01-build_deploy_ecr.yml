@@ -40,7 +40,7 @@ jobs:
         
     - name: Build application
       working-directory: application
-      run: mvn clean package
+      run: mvn -B package --file pom.xml
       
     - name: Create Docker image tag
       id: dockerImageTag

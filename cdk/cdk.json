@@ -16,6 +16,7 @@
     "region": "eu-west-2",
     "accountId": "697431348559",
     "applicationName": "todo-app",
+    "loginPageDomainPrefix:": "todo-app",
     "hostedZoneDomain": "giuliopulina.link",
     "applicationDomain": "todo.giuliopulina.link",
     "dockerRepositoryName": "todo-app",

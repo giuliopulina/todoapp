@@ -8,6 +8,7 @@ public class EcrRepositoryApp {
     public static void main(final String[] args) {
         App app = new App();
 
+        /* TODO: clean up parameters that are not needed by this app */
         String accountId = (String) app.getNode().tryGetContext("accountId");
         Validations.requireNonEmpty(accountId, "context variable 'accountId' must not be null");
 
@@ -28,10 +29,13 @@ public class EcrRepositoryApp {
 
         String dockerImageTag = (String) app.getNode().tryGetContext("dockerImageTag");
 
+        String loginPageDomainPrefix = (String) app.getNode().tryGetContext("loginPageDomainPrefix");
+        Validations.requireNonEmpty(applicationName, "context variable 'loginPageDomainPrefix' must not be null");
+
         Environment awsEnvironment = makeEnv(accountId, region);
 
         Parameters parameters = new Parameters(accountId, region, applicationName, hostedZoneDomain,
-                applicationDomain, dockerRepository, dockerImageTag);
+                applicationDomain, loginPageDomainPrefix, dockerRepository, dockerImageTag);
 
         new EcrRepositoryStack(app, "EcrRepositoryStack", StackProps
                 .builder()

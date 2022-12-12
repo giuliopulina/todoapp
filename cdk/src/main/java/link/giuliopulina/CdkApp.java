@@ -29,10 +29,13 @@ public class CdkApp {
         String dockerImageTag = (String) app.getNode().tryGetContext("dockerImageTag");
         Validations.requireNonEmpty(applicationName, "context variable 'dockerImageTag' must not be null");
 
+        String loginPageDomainPrefix = (String) app.getNode().tryGetContext("loginPageDomainPrefix");
+        Validations.requireNonEmpty(applicationName, "context variable 'loginPageDomainPrefix' must not be null");
+
         Environment awsEnvironment = makeEnv(accountId, region);
 
         Parameters parameters = new Parameters(accountId, region, applicationName, hostedZoneDomain,
-                applicationDomain, dockerRepository, dockerImageTag);
+                applicationDomain, loginPageDomainPrefix, dockerRepository, dockerImageTag);
 
         new CdkStack(app, "CdkStack", StackProps
                 .builder()
