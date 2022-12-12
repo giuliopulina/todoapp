@@ -38,7 +38,7 @@ public class CdkStack extends Stack {
 
         // Create the ECS Service
         Cluster cluster = new Cluster(this, "Ec2Cluster", ClusterProps.builder().vpc(vpc).build());
-        cluster.enableFargateCapacityProviders();
+        //cluster.enableFargateCapacityProviders();
         cluster.applyRemovalPolicy(RemovalPolicy.DESTROY);
 
         IHostedZone hostedZone = HostedZone.fromLookup(this, "HostedZone", HostedZoneProviderProps.builder()
@@ -60,9 +60,7 @@ public class CdkStack extends Stack {
         appCertificate.applyRemovalPolicy(RemovalPolicy.DESTROY);
 
         final CognitoOutput cognitoOutput = setupCognito(parameters);
-
-        System.out.println("cognito secret = " + cognitoOutput.userPoolClientSecret().unsafeUnwrap());
-
+        
         Role.Builder roleBuilder = Role.Builder.create(this, "ecsTaskRole")
                 .assumedBy(ServicePrincipal.Builder.create("ecs-tasks.amazonaws.com").build())
                 .path("/");
@@ -94,12 +92,12 @@ public class CdkStack extends Stack {
                 "FargateService",
                 ApplicationLoadBalancedFargateServiceProps.builder()
                         .cluster(cluster)
-                        .capacityProviderStrategies(
+                        /*.capacityProviderStrategies(
                                 singletonList(CapacityProviderStrategy.builder()
-                                        .capacityProvider("FARGATE") /* or FARGATE_SPOT */
+                                        .capacityProvider("FARGATE") // or FARGATE_SPOT
                                         .weight(1)
                                         .build()
-                                ))
+                                ))*/
                         .protocol(ApplicationProtocol.HTTPS)
                         .listenerPort(443)
                         .publicLoadBalancer(true)
