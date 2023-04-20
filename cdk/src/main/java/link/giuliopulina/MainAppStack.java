@@ -60,7 +60,7 @@ public class CdkStack extends Stack {
         appCertificate.applyRemovalPolicy(RemovalPolicy.DESTROY);
 
         final CognitoOutput cognitoOutput = setupCognito(parameters);
-        
+
         Role.Builder roleBuilder = Role.Builder.create(this, "ecsTaskRole")
                 .assumedBy(ServicePrincipal.Builder.create("ecs-tasks.amazonaws.com").build())
                 .path("/");
@@ -113,6 +113,8 @@ public class CdkStack extends Stack {
                         .redirectHttp(true)
                         .build());
 
+        fargateService.getTargetGroup().enableCookieStickiness(Duration.minutes(30));
+
         // Open port 443 inbound to IPs within VPC to allow network load balancer to connect to the service
         fargateService.getService()
                 .getConnections()
@@ -124,9 +126,6 @@ public class CdkStack extends Stack {
     }
 
     private CognitoOutput setupCognito(CdkParameters parameters) {
-
-        // FIXME: remove
-        System.out.println(parameters);
 
         String applicationUrl = "https://" + parameters.applicationDomain();
 

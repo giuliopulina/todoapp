@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.0.0</version>
+		<version>3.0.5</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.giuliopulina</groupId>
@@ -15,9 +15,7 @@
 	<description>Todo app</description>
 	<properties>
 		<java.version>17</java.version>
-		<!-- TODO: declaring AWS sdk version because cannot find in which BOM (if any) aws-sdk-java is defined -->
-		<awssdk-v2.version>2.18.0</awssdk-v2.version>
-		<spring-cloud-aws.version>3.0.0-M3</spring-cloud-aws.version>
+		<spring-cloud-aws.version>3.0.0-RC2</spring-cloud-aws.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
@@ -46,6 +44,16 @@
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-oauth2-client</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-thymeleaf</artifactId>
 		</dependency>
 		<dependency>
@@ -64,22 +72,15 @@
 			<groupId>io.awspring.cloud</groupId>
 			<artifactId>spring-cloud-aws-sqs</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>software.amazon.awssdk</groupId>
-			<artifactId>aws-sdk-java</artifactId>
-			<version>${awssdk-v2.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>software.amazon.awssdk</groupId>
-					<artifactId>ruleset-testing-core</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
 
 		<dependency>
 			<groupId>nz.net.ultraq.thymeleaf</groupId>
 			<artifactId>thymeleaf-layout-dialect</artifactId>
-			<version>3.1.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>cognitoidentityprovider</artifactId>
 		</dependency>
 
 		<dependency>
@@ -96,7 +97,19 @@
 		<dependency>
 			<groupId>org.webjars</groupId>
 			<artifactId>font-awesome</artifactId>
-			<version>6.2.0</version>
+			<version>6.3.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.webjars</groupId>
+			<artifactId>popper.js</artifactId>
+			<version>2.9.3</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.webjars</groupId>
+			<artifactId>jquery</artifactId>
+			<version>3.6.3</version>
 		</dependency>
 
 		<dependency>
