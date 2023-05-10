@@ -32,10 +32,13 @@ public class MainApp {
         String loginPageDomainPrefix = (String) app.getNode().tryGetContext("loginPageDomainPrefix");
         Validations.requireNonEmpty(loginPageDomainPrefix, "context variable 'loginPageDomainPrefix' must not be null");
 
+        String springProfile = (String) app.getNode().tryGetContext("springProfile");
+        Validations.requireNonEmpty(springProfile, "context variable 'springProfile' must not be null");
+
         Environment awsEnvironment = makeEnv(accountId, region);
 
         MainAppParameters parameters = new MainAppParameters(accountId, region, applicationName, hostedZoneDomain,
-                applicationDomain, loginPageDomainPrefix, dockerRepository, dockerImageTag);
+                applicationDomain, loginPageDomainPrefix, dockerRepository, dockerImageTag, springProfile);
 
         new MainAppStack(app, "ApplicationStack", StackProps
                 .builder()

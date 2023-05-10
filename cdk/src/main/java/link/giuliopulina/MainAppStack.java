@@ -127,7 +127,7 @@ public class MainAppStack extends Stack {
                         .desiredCount(1)
                         .taskImageOptions(ApplicationLoadBalancedTaskImageOptions.builder()
                                 .image(image)
-                                .environment(appEnvironmentVariables(databaseOutput))
+                                .environment(appEnvironmentVariables(parameters, databaseOutput))
                                 .containerPort(8080)
                                 .taskRole(ecsTaskRole)
                                 .build())
@@ -146,7 +146,7 @@ public class MainAppStack extends Stack {
         fargateService.getService().applyRemovalPolicy(RemovalPolicy.DESTROY);
     }
 
-    private Map<String, String> appEnvironmentVariables(DatabaseOutput databaseOutput) {
+    private Map<String, String> appEnvironmentVariables(MainAppParameters parameters, DatabaseOutput databaseOutput) {
 
         final Map<String, String> vars = new HashMap<>();
         final Secret credentials = databaseOutput.credentialsJson();
@@ -159,6 +159,8 @@ public class MainAppStack extends Stack {
                 credentials.secretValueFromJson("username").toString());
         vars.put("SPRING_DATASOURCE_PASSWORD",
                 credentials.secretValueFromJson("password").toString());
+
+        vars.put("SPRING_PROFILES_ACTIVE", parameters.springProfile());
 
         return vars;
     }

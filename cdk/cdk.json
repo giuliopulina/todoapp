@@ -21,6 +21,7 @@
     "applicationDomain": "todo.giuliopulina.link",
     "dockerRepositoryName": "todo-app",
     "dockerImageTag": "DYNAMICALLY_OVERRIDDEN_BY_WORKFLOW",
+    "springProfile": "aws",
     "@aws-cdk/aws-lambda:recognizeLayerVersion": true,
     "@aws-cdk/core:checkSecretUsage": true,
     "@aws-cdk/core:target-partitions": [

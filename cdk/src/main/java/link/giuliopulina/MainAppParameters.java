@@ -8,4 +8,6 @@ public record MainAppParameters(
         String applicationDomain,
         String loginPageDomainPrefix,
         String dockerRepositoryName,
-        String dockerImageTag) { }
+        String dockerImageTag,
+
+        String springProfile) { }
