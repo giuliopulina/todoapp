@@ -169,7 +169,7 @@ public class MainAppStack extends Stack {
     private DatabaseOutput setupPostgres(Vpc vpc) {
 
         // TODO: harcoded values, can be parametrized
-        int storageInGb = 1;
+        int storageInGb = 20;
         String instanceClass = "db.t2.micro";
         String postgresVersion = "12.9";
 
@@ -200,11 +200,11 @@ public class MainAppStack extends Stack {
                 .build();
 
         CfnDBInstance dbInstance = CfnDBInstance.Builder.create(this, "postgresInstance")
-                .dbInstanceIdentifier("database")
+                .dbInstanceIdentifier("todoappdb")
                 .allocatedStorage(String.valueOf(storageInGb))
                 .availabilityZone(vpc.getAvailabilityZones().get(0))
                 .dbInstanceClass(instanceClass)
-                .dbName("database")
+                .dbName("todoapp")
                 .dbSubnetGroupName(subnetGroup.getDbSubnetGroupName())
                 .engine("postgres")
                 .engineVersion(postgresVersion)
