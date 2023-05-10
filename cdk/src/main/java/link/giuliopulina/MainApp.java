@@ -4,7 +4,7 @@ import software.amazon.awscdk.App;
 import software.amazon.awscdk.Environment;
 import software.amazon.awscdk.StackProps;
 
-public class CdkApp {
+public class MainApp {
     public static void main(final String[] args) {
         App app = new App();
 
@@ -34,12 +34,12 @@ public class CdkApp {
 
         Environment awsEnvironment = makeEnv(accountId, region);
 
-        CdkParameters parameters = new CdkParameters(accountId, region, applicationName, hostedZoneDomain,
+        MainAppParameters parameters = new MainAppParameters(accountId, region, applicationName, hostedZoneDomain,
                 applicationDomain, loginPageDomainPrefix, dockerRepository, dockerImageTag);
 
-        new CdkStack(app, "CdkStack", StackProps
+        new MainAppStack(app, "ApplicationStack", StackProps
                 .builder()
-                .stackName("CdkStack")
+                .stackName("ApplicationStack")
                 .env(awsEnvironment)
                 .build(), parameters);
 

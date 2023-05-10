@@ -1,6 +1,6 @@
 package link.giuliopulina;
 
-public record CdkParameters(
+public record MainAppParameters(
         String accountId,
         String region,
         String applicationName,
