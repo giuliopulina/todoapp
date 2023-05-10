@@ -79,6 +79,7 @@ public class MainAppStack extends Stack {
         appCertificate.applyRemovalPolicy(RemovalPolicy.DESTROY);
 
         final CognitoOutput cognitoOutput = setupCognito(parameters);
+        final DatabaseOutput databaseOutput = setupPostgres(vpc);
 
         Role.Builder roleBuilder = Role.Builder.create(this, "ecsTaskRole")
                 .assumedBy(ServicePrincipal.Builder.create("ecs-tasks.amazonaws.com").build())
@@ -102,12 +103,13 @@ public class MainAppStack extends Stack {
 
         final Role ecsTaskRole = roleBuilder.build();
 
-        DatabaseOutput databaseOutput = setupPostgres(vpc);
-
         IRepository ecrRepository = Repository.fromRepositoryName(this, "ecrRepository", parameters.dockerRepositoryName());
         ContainerImage image = RepositoryImage.fromEcrRepository(ecrRepository, parameters.dockerImageTag());
 
-        // Use the ECS Network Load Balanced Fargate Service construct to create a ECS service
+        // Use the ECS Network Load Balanced Fargate Service construct to create a ECS service.
+        // Running in public subnet to avoid create the expensive NAT Gateway (
+        //      assignPublicIp = true AND taskSubnets = PUBLIC
+        // )
         ApplicationLoadBalancedFargateService fargateService = new ApplicationLoadBalancedFargateService(
                 this,
                 "FargateService",
@@ -129,7 +131,7 @@ public class MainAppStack extends Stack {
                         .desiredCount(1)
                         .taskImageOptions(ApplicationLoadBalancedTaskImageOptions.builder()
                                 .image(image)
-                                .environment(appEnvironmentVariables(parameters, databaseOutput))
+                                .environment(appEnvironmentVariables(parameters, databaseOutput, cognitoOutput))
                                 .containerPort(8080)
                                 .taskRole(ecsTaskRole)
                                 .build())
@@ -142,16 +144,19 @@ public class MainAppStack extends Stack {
         fargateService.getTargetGroup().enableCookieStickiness(Duration.minutes(30));
 
         // Open port 443 inbound to IPs within VPC to allow network load balancer to connect to the service
-        fargateService.getService()
+        ISecurityGroup ecsSecurityGroup = fargateService.getService()
                 .getConnections()
                 .getSecurityGroups()
-                .get(0)
-                .addIngressRule(Peer.ipv4(vpc.getVpcCidrBlock()), Port.tcp(443), "allow https inbound from vpc");
+                .get(0);
+
+        ecsSecurityGroup.addIngressRule(Peer.ipv4(vpc.getVpcCidrBlock()), Port.tcp(443), "allow https inbound from vpc");
+
+        allowIngressFromEcs(singletonList(databaseOutput.securityGroupId()), ecsSecurityGroup);
 
         fargateService.getService().applyRemovalPolicy(RemovalPolicy.DESTROY);
     }
 
-    private Map<String, String> appEnvironmentVariables(MainAppParameters parameters, DatabaseOutput databaseOutput) {
+    private Map<String, String> appEnvironmentVariables(MainAppParameters parameters, DatabaseOutput databaseOutput, CognitoOutput cognitoOutput) {
 
         final Map<String, String> vars = new HashMap<>();
         final ISecret credentials = databaseOutput.credentialsJson();
@@ -166,6 +171,12 @@ public class MainAppStack extends Stack {
                 credentials.secretValueFromJson("password").unsafeUnwrap());
 
         vars.put("SPRING_PROFILES_ACTIVE", parameters.springProfile());
+
+        vars.put("COGNITO_CLIENT_ID", cognitoOutput.userPoolClientId());
+        vars.put("COGNITO_CLIENT_SECRET", cognitoOutput.userPoolClientSecret().unsafeUnwrap());
+        vars.put("COGNITO_USER_POOL_ID", cognitoOutput.userPoolId());
+        vars.put("COGNITO_LOGOUT_URL", cognitoOutput.logoutUrl());
+        vars.put("COGNITO_PROVIDER_URL", cognitoOutput.providerUrl());
 
         return vars;
     }
@@ -203,6 +214,8 @@ public class MainAppStack extends Stack {
                 .subnetIds(vpc.getIsolatedSubnets().stream().map(ISubnet::getSubnetId).toList())
                 .build();
 
+        subnetGroup.applyRemovalPolicy(RemovalPolicy.DESTROY);
+
         CfnDBInstance dbInstance = CfnDBInstance.Builder.create(this, "postgresInstance")
                 .dbInstanceIdentifier("todoappdb")
                 .allocatedStorage(String.valueOf(storageInGb))
@@ -228,7 +241,9 @@ public class MainAppStack extends Stack {
                 dbInstance.getAttrEndpointAddress(),
                 dbInstance.getAttrEndpointPort(),
                 dbInstance.getDbName(),
-                databaseSecret);
+                databaseSecret,
+                databaseSecurityGroup.getAttrGroupId(),
+                dbInstance.getDbInstanceIdentifier());
 
     }
 
@@ -287,9 +302,21 @@ public class MainAppStack extends Stack {
         return new CognitoOutput(userPool.getUserPoolId(), userPoolClient.getUserPoolClientId(), userPoolClient.getUserPoolClientSecret(), logoutUrl, userPool.getUserPoolProviderUrl());
     }
 
+    private void allowIngressFromEcs(List<String> securityGroupIds, ISecurityGroup ecsSecurityGroup) {
+        int i = 1;
+        for (String securityGroupId : securityGroupIds) {
+            CfnSecurityGroupIngress ingress = CfnSecurityGroupIngress.Builder.create(this, "securityGroupIngress" + i)
+                    .sourceSecurityGroupId(ecsSecurityGroup.getSecurityGroupId())
+                    .groupId(securityGroupId)
+                    .ipProtocol("-1")
+                    .build();
+            i++;
+        }
+    }
+
     record CognitoOutput(String userPoolId, String userPoolClientId, SecretValue userPoolClientSecret, String logoutUrl, String providerUrl) {
 
     }
 
-    record DatabaseOutput(String endpointAddress, String endpointPort, String dbName, ISecret credentialsJson) {}
+    record DatabaseOutput(String endpointAddress, String endpointPort, String dbName, ISecret credentialsJson, String securityGroupId, String instanceId) {}
 }
