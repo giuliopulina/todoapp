@@ -171,7 +171,7 @@ public class MainAppStack extends Stack {
         // TODO: harcoded values, can be parametrized
         int storageInGb = 1;
         String instanceClass = "db.t2.micro";
-        String postgresVersion = "13.3";
+        String postgresVersion = "12.9";
 
         String username = "dbUser";
 
