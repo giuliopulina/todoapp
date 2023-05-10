@@ -16,6 +16,7 @@ import software.amazon.awscdk.services.rds.CfnDBInstance;
 import software.amazon.awscdk.services.rds.CfnDBSubnetGroup;
 import software.amazon.awscdk.services.route53.*;
 import software.amazon.awscdk.services.secretsmanager.CfnSecretTargetAttachment;
+import software.amazon.awscdk.services.secretsmanager.ISecret;
 import software.amazon.awscdk.services.secretsmanager.Secret;
 import software.amazon.awscdk.services.secretsmanager.SecretStringGenerator;
 import software.constructs.Construct;
@@ -149,16 +150,16 @@ public class MainAppStack extends Stack {
     private Map<String, String> appEnvironmentVariables(MainAppParameters parameters, DatabaseOutput databaseOutput) {
 
         final Map<String, String> vars = new HashMap<>();
-        final Secret credentials = databaseOutput.credentialsJson();
+        final ISecret credentials = databaseOutput.credentialsJson();
         vars.put("SPRING_DATASOURCE_URL",
                 String.format("jdbc:postgresql://%s:%s/%s",
                         databaseOutput.endpointAddress(),
                         databaseOutput.endpointPort(),
                         databaseOutput.dbName()));
         vars.put("SPRING_DATASOURCE_USERNAME",
-                credentials.secretValueFromJson("username").toString());
+                credentials.secretValueFromJson("username").unsafeUnwrap());
         vars.put("SPRING_DATASOURCE_PASSWORD",
-                credentials.secretValueFromJson("password").toString());
+                credentials.secretValueFromJson("password").unsafeUnwrap());
 
         vars.put("SPRING_PROFILES_ACTIVE", parameters.springProfile());
 
@@ -181,7 +182,7 @@ public class MainAppStack extends Stack {
                 .build();
 
         // This will generate a JSON object with the keys "username" and "password".
-        Secret databaseSecret = Secret.Builder.create(this, "databaseSecret")
+        ISecret databaseSecret = Secret.Builder.create(this, "databaseSecret")
                 .secretName("DatabaseSecret")
                 .description("Credentials to the RDS instance")
                 .generateSecretString(SecretStringGenerator.builder()
@@ -208,7 +209,7 @@ public class MainAppStack extends Stack {
                 .engine("postgres")
                 .engineVersion(postgresVersion)
                 .masterUsername(username)
-                .masterUserPassword(databaseSecret.secretValueFromJson("password").toString())
+                .masterUserPassword(databaseSecret.secretValueFromJson("password").unsafeUnwrap())
                 .publiclyAccessible(false)
                 .vpcSecurityGroups(Collections.singletonList(databaseSecurityGroup.getAttrGroupId()))
                 .build();
@@ -286,5 +287,5 @@ public class MainAppStack extends Stack {
 
     }
 
-    record DatabaseOutput(String endpointAddress, String endpointPort, String dbName, Secret credentialsJson) {}
+    record DatabaseOutput(String endpointAddress, String endpointPort, String dbName, ISecret credentialsJson) {}
 }
