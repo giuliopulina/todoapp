@@ -113,6 +113,7 @@ public class MainAppStack extends Stack {
                 "FargateService",
                 ApplicationLoadBalancedFargateServiceProps.builder()
                         .cluster(cluster)
+                        .assignPublicIp(true)
                         /*.capacityProviderStrategies(
                                 singletonList(CapacityProviderStrategy.builder()
                                         .capacityProvider("FARGATE") // or FARGATE_SPOT
@@ -131,6 +132,9 @@ public class MainAppStack extends Stack {
                                 .environment(appEnvironmentVariables(parameters, databaseOutput))
                                 .containerPort(8080)
                                 .taskRole(ecsTaskRole)
+                                .build())
+                        .taskSubnets(SubnetSelection.builder()
+                                .subnetType(SubnetType.PUBLIC)
                                 .build())
                         .redirectHttp(true)
                         .build());
