@@ -132,8 +132,8 @@ public class MainAppStack extends Stack {
                         .domainName(parameters.applicationDomain())
                         .domainZone(appHostedZone)
                         .desiredCount(1)
-                        .cpu(256)
-                        .memoryLimitMiB(512)
+                        .cpu(512)
+                        .memoryLimitMiB(1024)
                         .healthCheckGracePeriod(Duration.seconds(30))
                         .taskImageOptions(ApplicationLoadBalancedTaskImageOptions.builder()
                                 .image(image)
@@ -148,9 +148,10 @@ public class MainAppStack extends Stack {
                         .build());
 
         ApplicationTargetGroup targetGroup = fargateService.getTargetGroup();
+        targetGroup.setAttribute("deregistration_delay.timeout_seconds", "30");
         targetGroup.enableCookieStickiness(Duration.minutes(30));
         targetGroup.configureHealthCheck(HealthCheck.builder()
-                        .interval(Duration.seconds(300))
+                        .interval(Duration.seconds(60))
                         .path("/")
                         .healthyThresholdCount(2)
                         .unhealthyThresholdCount(2)
