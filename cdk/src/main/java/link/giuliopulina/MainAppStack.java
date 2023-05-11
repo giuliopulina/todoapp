@@ -251,6 +251,9 @@ public class MainAppStack extends Stack {
                 .engine("postgres")
                 .engineVersion(postgresVersion)
                 .masterUsername(username)
+                // TODO: be careful with backups
+                .deleteAutomatedBackups(true)
+                .backupRetentionPeriod(0)
                 .masterUserPassword(databaseSecret.secretValueFromJson("password").unsafeUnwrap())
                 .publiclyAccessible(false)
                 .vpcSecurityGroups(Collections.singletonList(databaseSecurityGroup.getAttrGroupId()))
