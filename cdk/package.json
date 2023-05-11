@@ -9,7 +9,7 @@
     "app:destroy": "cdk destroy --app \"mvn -e -q clean compile exec:java -Dexec.mainClass=link.giuliopulina.MainApp\" --force --require-approval never"
   },
   "devDependencies": {
-    "aws-cdk": "2.53.0"
+    "aws-cdk": "2.79.0"
   },
   "engines": {
     "node": ">=16"

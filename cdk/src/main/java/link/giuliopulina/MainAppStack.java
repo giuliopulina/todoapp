@@ -17,7 +17,6 @@ import software.amazon.awscdk.services.elasticloadbalancingv2.Protocol;
 import software.amazon.awscdk.services.iam.*;
 import software.amazon.awscdk.services.rds.*;
 import software.amazon.awscdk.services.route53.*;
-import software.amazon.awscdk.services.secretsmanager.CfnSecretTargetAttachment;
 import software.amazon.awscdk.services.secretsmanager.ISecret;
 import software.amazon.awscdk.services.secretsmanager.Secret;
 import software.amazon.awscdk.services.secretsmanager.SecretStringGenerator;
@@ -26,7 +25,6 @@ import software.constructs.Construct;
 import java.util.*;
 
 import static java.util.Collections.singletonList;
-import static software.amazon.awscdk.services.ec2.InterfaceVpcEndpointAwsService.RDS;
 import static software.amazon.awscdk.services.ec2.SubnetType.PRIVATE_ISOLATED;
 
 
@@ -204,9 +202,6 @@ public class MainAppStack extends Stack {
 
     private DatabaseOutput setupPostgres(Vpc vpc) {
 
-        // TODO: harcoded values, can be parametrized
-        // TODO: be careful with removal policy once some data is there
-
         final String username = "dbUser";
         final String databaseName = "todoapp";
 
@@ -239,6 +234,7 @@ public class MainAppStack extends Stack {
                 .autoMinorVersionUpgrade(false)
                 .backupRetention(Duration.days(0))
                 .deleteAutomatedBackups(true)
+                // TODO: be careful with removal policy once data needs to be retained
                 .removalPolicy(RemovalPolicy.DESTROY)
                 .deletionProtection(false)
                 .databaseName("todoapp")
@@ -259,7 +255,7 @@ public class MainAppStack extends Stack {
 
         String applicationUrl = "https://" + parameters.applicationDomain();
 
-        final UserPool userPool = UserPool.Builder.create(this, "userPool")
+        final UserPool userPool = UserPool.Builder.create(this, "pool")
                 .userPoolName(parameters.applicationName() + "-user-pool")
                 .selfSignUpEnabled(false)
                 .accountRecovery(AccountRecovery.EMAIL_ONLY)
