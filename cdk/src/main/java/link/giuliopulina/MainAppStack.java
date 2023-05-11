@@ -15,8 +15,7 @@ import software.amazon.awscdk.services.elasticloadbalancingv2.ApplicationTargetG
 import software.amazon.awscdk.services.elasticloadbalancingv2.HealthCheck;
 import software.amazon.awscdk.services.elasticloadbalancingv2.Protocol;
 import software.amazon.awscdk.services.iam.*;
-import software.amazon.awscdk.services.rds.CfnDBInstance;
-import software.amazon.awscdk.services.rds.CfnDBSubnetGroup;
+import software.amazon.awscdk.services.rds.*;
 import software.amazon.awscdk.services.route53.*;
 import software.amazon.awscdk.services.secretsmanager.CfnSecretTargetAttachment;
 import software.amazon.awscdk.services.secretsmanager.ISecret;
@@ -27,6 +26,8 @@ import software.constructs.Construct;
 import java.util.*;
 
 import static java.util.Collections.singletonList;
+import static software.amazon.awscdk.services.ec2.InterfaceVpcEndpointAwsService.RDS;
+import static software.amazon.awscdk.services.ec2.SubnetType.PRIVATE_ISOLATED;
 
 
 public class MainAppStack extends Stack {
@@ -47,7 +48,7 @@ public class MainAppStack extends Stack {
                                 .name("publicSubnet")
                                 .build(),
                         SubnetConfiguration.builder()
-                                .subnetType(SubnetType.PRIVATE_ISOLATED)
+                                .subnetType(PRIVATE_ISOLATED)
                                 .name("isolatedSubnet")
                                 .build()
                 ))
@@ -166,10 +167,12 @@ public class MainAppStack extends Stack {
                 .getSecurityGroups()
                 .get(0);
 
-        ecsSecurityGroup.addIngressRule(Peer.ipv4(vpc.getVpcCidrBlock()), Port.tcp(443), "allow https inbound from vpc");
+        //TODO: not sure this is needed, commenting it
+        //ecsSecurityGroup.addIngressRule(Peer.ipv4(vpc.getVpcCidrBlock()), Port.tcp(443), "allow https inbound from vpc");
 
         // allow ingress to database from ecs security group
-        allowIngressFromEcs(singletonList(databaseOutput.securityGroupId()), ecsSecurityGroup);
+        DatabaseInstance databaseInstance = databaseOutput.databaseInstance();
+        databaseInstance.getConnections().allowFrom(ecsSecurityGroup, Port.tcp(5432), "Allow connection from ECS to Postgres on port 5432");
 
         fargateService.getService().applyRemovalPolicy(RemovalPolicy.DESTROY);
     }
@@ -202,24 +205,11 @@ public class MainAppStack extends Stack {
     private DatabaseOutput setupPostgres(Vpc vpc) {
 
         // TODO: harcoded values, can be parametrized
-
         // TODO: be careful with removal policy once some data is there
 
-        int storageInGb = 20;
-        String instanceClass = "db.t2.micro";
-        String postgresVersion = "12.9";
+        final String username = "dbUser";
+        final String databaseName = "todoapp";
 
-        String username = "dbUser";
-
-        CfnSecurityGroup databaseSecurityGroup = CfnSecurityGroup.Builder.create(this, "databaseSecurityGroup")
-                .vpcId(vpc.getVpcId())
-                .groupDescription("Security Group for the database instance")
-                .groupName("dbSecurityGroup")
-                .build();
-
-        databaseSecurityGroup.applyRemovalPolicy(RemovalPolicy.DESTROY);
-
-        // This will generate a JSON object with the keys "username" and "password".
         ISecret databaseSecret = Secret.Builder.create(this, "databaseSecret")
                 .secretName("DatabaseSecret")
                 .description("Credentials to the RDS instance")
@@ -231,49 +221,37 @@ public class MainAppStack extends Stack {
                         .build())
                 .build();
 
-        databaseSecret.applyRemovalPolicy(RemovalPolicy.DESTROY);
-
-        CfnDBSubnetGroup subnetGroup = CfnDBSubnetGroup.Builder.create(this, "dbSubnetGroup")
-                .dbSubnetGroupDescription("Subnet group for the RDS instance")
-                .dbSubnetGroupName("dbSubnetGroup")
-                .subnetIds(vpc.getIsolatedSubnets().stream().map(ISubnet::getSubnetId).toList())
-                .build();
-
-        subnetGroup.applyRemovalPolicy(RemovalPolicy.DESTROY);
-
-        CfnDBInstance dbInstance = CfnDBInstance.Builder.create(this, "postgresInstance")
-                .dbInstanceIdentifier("todoappdb")
-                .allocatedStorage(String.valueOf(storageInGb))
-                .availabilityZone(vpc.getAvailabilityZones().get(0))
-                .dbInstanceClass(instanceClass)
-                .dbName("todoapp")
-                .dbSubnetGroupName(subnetGroup.getDbSubnetGroupName())
-                .engine("postgres")
-                .engineVersion(postgresVersion)
-                .masterUsername(username)
-                // TODO: be careful with backups
+        var dbInstance = new DatabaseInstance(this, "db-instance", DatabaseInstanceProps.builder()
+                .vpc(vpc)
+                .vpcSubnets(SubnetSelection
+                        .builder()
+                        .subnetType(PRIVATE_ISOLATED)
+                        .build())
+                .engine(DatabaseInstanceEngine.postgres(
+                        PostgresInstanceEngineProps.builder()
+                                .version(PostgresEngineVersion.VER_12_9)
+                                .build()))
+                .instanceType(InstanceType.of(InstanceClass.BURSTABLE3, InstanceSize.MICRO))
+                .credentials(Credentials.fromSecret(databaseSecret))
+                .allocatedStorage(20)
+                .maxAllocatedStorage(20)
+                .allowMajorVersionUpgrade(false)
+                .autoMinorVersionUpgrade(false)
+                .backupRetention(Duration.days(0))
                 .deleteAutomatedBackups(true)
-                .backupRetentionPeriod(0)
-                .masterUserPassword(databaseSecret.secretValueFromJson("password").unsafeUnwrap())
+                .removalPolicy(RemovalPolicy.DESTROY)
+                .deletionProtection(false)
+                .databaseName("todoapp")
                 .publiclyAccessible(false)
-                .vpcSecurityGroups(Collections.singletonList(databaseSecurityGroup.getAttrGroupId()))
-                .build();
-
-        dbInstance.applyRemovalPolicy(RemovalPolicy.DESTROY);
-
-        CfnSecretTargetAttachment.Builder.create(this, "secretTargetAttachment")
-                .secretId(databaseSecret.getSecretArn())
-                .targetId(dbInstance.getRef())
-                .targetType("AWS::RDS::DBInstance")
-                .build();
+                .build());
 
         return new DatabaseOutput(
-                dbInstance.getAttrEndpointAddress(),
-                dbInstance.getAttrEndpointPort(),
-                dbInstance.getDbName(),
+                dbInstance,
+                dbInstance.getDbInstanceEndpointAddress(),
+                dbInstance.getDbInstanceEndpointPort(),
+                databaseName,
                 databaseSecret,
-                databaseSecurityGroup.getAttrGroupId(),
-                dbInstance.getDbInstanceIdentifier());
+                dbInstance.getInstanceIdentifier());
 
     }
 
@@ -332,21 +310,9 @@ public class MainAppStack extends Stack {
         return new CognitoOutput(userPool.getUserPoolId(), userPoolClient.getUserPoolClientId(), userPoolClient.getUserPoolClientSecret(), logoutUrl, userPool.getUserPoolProviderUrl());
     }
 
-    private void allowIngressFromEcs(List<String> securityGroupIds, ISecurityGroup ecsSecurityGroup) {
-        int i = 1;
-        for (String securityGroupId : securityGroupIds) {
-            CfnSecurityGroupIngress ingress = CfnSecurityGroupIngress.Builder.create(this, "securityGroupIngress" + i)
-                    .sourceSecurityGroupId(ecsSecurityGroup.getSecurityGroupId())
-                    .groupId(securityGroupId)
-                    .ipProtocol("-1")
-                    .build();
-            i++;
-        }
-    }
-
     record CognitoOutput(String userPoolId, String userPoolClientId, SecretValue userPoolClientSecret, String logoutUrl, String providerUrl) {
 
     }
 
-    record DatabaseOutput(String endpointAddress, String endpointPort, String dbName, ISecret credentialsJson, String securityGroupId, String instanceId) {}
+    record DatabaseOutput(DatabaseInstance databaseInstance, String endpointAddress, String endpointPort, String dbName, ISecret credentialsJson, String instanceId) {}
 }
