@@ -134,7 +134,7 @@ public class MainAppStack extends Stack {
                         .desiredCount(1)
                         .cpu(512)
                         .memoryLimitMiB(1024)
-                        .healthCheckGracePeriod(Duration.seconds(30))
+                        .healthCheckGracePeriod(Duration.seconds(120))
                         .taskImageOptions(ApplicationLoadBalancedTaskImageOptions.builder()
                                 .image(image)
                                 .environment(appEnvironmentVariables(parameters, databaseOutput, cognitoOutput))
@@ -157,6 +157,7 @@ public class MainAppStack extends Stack {
                         .unhealthyThresholdCount(2)
                         .protocol(Protocol.HTTP)
                         .port("traffic-port")
+                        .timeout(Duration.seconds(10))
                         .build());
 
         // Open port 443 inbound to IPs within VPC to allow network load balancer to connect to the service
