@@ -202,6 +202,9 @@ public class MainAppStack extends Stack {
     private DatabaseOutput setupPostgres(Vpc vpc) {
 
         // TODO: harcoded values, can be parametrized
+
+        // TODO: be careful with removal policy once some data is there
+
         int storageInGb = 20;
         String instanceClass = "db.t2.micro";
         String postgresVersion = "12.9";
@@ -214,6 +217,8 @@ public class MainAppStack extends Stack {
                 .groupName("dbSecurityGroup")
                 .build();
 
+        databaseSecurityGroup.applyRemovalPolicy(RemovalPolicy.DESTROY);
+
         // This will generate a JSON object with the keys "username" and "password".
         ISecret databaseSecret = Secret.Builder.create(this, "databaseSecret")
                 .secretName("DatabaseSecret")
@@ -225,6 +230,8 @@ public class MainAppStack extends Stack {
                         .excludeCharacters("@/\\\" ")
                         .build())
                 .build();
+
+        databaseSecret.applyRemovalPolicy(RemovalPolicy.DESTROY);
 
         CfnDBSubnetGroup subnetGroup = CfnDBSubnetGroup.Builder.create(this, "dbSubnetGroup")
                 .dbSubnetGroupDescription("Subnet group for the RDS instance")
@@ -248,6 +255,8 @@ public class MainAppStack extends Stack {
                 .publiclyAccessible(false)
                 .vpcSecurityGroups(Collections.singletonList(databaseSecurityGroup.getAttrGroupId()))
                 .build();
+
+        dbInstance.applyRemovalPolicy(RemovalPolicy.DESTROY);
 
         CfnSecretTargetAttachment.Builder.create(this, "secretTargetAttachment")
                 .secretId(databaseSecret.getSecretArn())
