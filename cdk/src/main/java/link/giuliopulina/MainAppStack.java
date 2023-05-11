@@ -11,6 +11,9 @@ import software.amazon.awscdk.services.ecr.Repository;
 import software.amazon.awscdk.services.ecs.*;
 import software.amazon.awscdk.services.ecs.patterns.*;
 import software.amazon.awscdk.services.elasticloadbalancingv2.ApplicationProtocol;
+import software.amazon.awscdk.services.elasticloadbalancingv2.ApplicationTargetGroup;
+import software.amazon.awscdk.services.elasticloadbalancingv2.HealthCheck;
+import software.amazon.awscdk.services.elasticloadbalancingv2.Protocol;
 import software.amazon.awscdk.services.iam.*;
 import software.amazon.awscdk.services.rds.CfnDBInstance;
 import software.amazon.awscdk.services.rds.CfnDBSubnetGroup;
@@ -129,6 +132,9 @@ public class MainAppStack extends Stack {
                         .domainName(parameters.applicationDomain())
                         .domainZone(appHostedZone)
                         .desiredCount(1)
+                        .cpu(256)
+                        .memoryLimitMiB(512)
+                        .healthCheckGracePeriod(Duration.seconds(30))
                         .taskImageOptions(ApplicationLoadBalancedTaskImageOptions.builder()
                                 .image(image)
                                 .environment(appEnvironmentVariables(parameters, databaseOutput, cognitoOutput))
@@ -141,7 +147,16 @@ public class MainAppStack extends Stack {
                         .redirectHttp(true)
                         .build());
 
-        fargateService.getTargetGroup().enableCookieStickiness(Duration.minutes(30));
+        ApplicationTargetGroup targetGroup = fargateService.getTargetGroup();
+        targetGroup.enableCookieStickiness(Duration.minutes(30));
+        targetGroup.configureHealthCheck(HealthCheck.builder()
+                        .interval(Duration.seconds(300))
+                        .path("/")
+                        .healthyThresholdCount(2)
+                        .unhealthyThresholdCount(2)
+                        .protocol(Protocol.HTTP)
+                        .port("traffic-port")
+                        .build());
 
         // Open port 443 inbound to IPs within VPC to allow network load balancer to connect to the service
         ISecurityGroup ecsSecurityGroup = fargateService.getService()
@@ -151,6 +166,7 @@ public class MainAppStack extends Stack {
 
         ecsSecurityGroup.addIngressRule(Peer.ipv4(vpc.getVpcCidrBlock()), Port.tcp(443), "allow https inbound from vpc");
 
+        // allow ingress to database from ecs security group
         allowIngressFromEcs(singletonList(databaseOutput.securityGroupId()), ecsSecurityGroup);
 
         fargateService.getService().applyRemovalPolicy(RemovalPolicy.DESTROY);
