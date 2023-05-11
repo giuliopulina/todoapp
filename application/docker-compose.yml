@@ -1,6 +1,14 @@
 version: '3.3'
 
 services:
+  postgres:
+    image: postgres:12.9
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=stratospheric
+      - POSTGRES_PASSWORD=stratospheric
+      - POSTGRES_DB=stratospheric
   keycloak:
     image: quay.io/keycloak/keycloak:18.0.0-legacy
     ports:

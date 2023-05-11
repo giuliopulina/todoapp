@@ -28,6 +28,9 @@ spring:
         provider:
           cognito:
             issuerUri: http://localhost:8888/auth/realms/stratospheric
-
+  datasource:
+    url: jdbc:postgresql://localhost:5432/stratospheric
+    username: stratospheric
+    password: stratospheric
 custom:
   use-cognito-as-identity-provider: false
