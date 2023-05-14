@@ -266,6 +266,8 @@ public class MainAppStack extends Stack {
                         .email(StandardAttribute.builder().required(true).mutable(false).build())
                         .build())
                 .mfa(Mfa.OFF)
+                // TODO: be careful with removal policy once data needs to be retained
+                .removalPolicy(RemovalPolicy.DESTROY)
                 .passwordPolicy(PasswordPolicy.builder()
                         .requireLowercase(true)
                         .requireDigits(true)
