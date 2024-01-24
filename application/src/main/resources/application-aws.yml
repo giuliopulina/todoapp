@@ -7,7 +7,7 @@ spring:
             clientId: ${COGNITO_CLIENT_ID}
             clientSecret: ${COGNITO_CLIENT_SECRET}
             scope: openid, profile, email
-            clientName: todo-app-client
+            clientName: stratospheric-app-client
         provider:
           cognito:
             issuerUri: ${COGNITO_PROVIDER_URL}

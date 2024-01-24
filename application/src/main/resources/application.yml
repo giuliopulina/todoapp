@@ -1,6 +1,9 @@
 spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
+  hibernate:
+    ddl-auto: validate
+    open-in-view: false
 cloud:
   aws:
     stack:
@@ -13,6 +16,11 @@ cloud:
         enabled: false
     sns:
       enabled: false
+
+error:
+  handling:
+    exception-logging: WITH_STACKTRACE
+
 server:
   forward-headers-strategy: framework
 

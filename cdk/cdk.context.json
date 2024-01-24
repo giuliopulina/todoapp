@@ -4,12 +4,8 @@
     "eu-west-2b",
     "eu-west-2c"
   ],
-  "hosted-zone:account=697431348559:domainName=giuliopulina.link:region=eu-west-2": {
-    "Id": "/hostedzone/Z04796443KJU3DL6F8J9W",
-    "Name": "giuliopulina.link."
-  },
-  "hosted-zone:account=697431348559:domainName=todo.giuliopulina.link:region=eu-west-2": {
-    "Id": "/hostedzone/Z09052922SV51CI7TOHQZ",
-    "Name": "todo.giuliopulina.link."
+  "hosted-zone:account=697431348559:domainName=giuliopulina.net:region=eu-west-2": {
+    "Id": "/hostedzone/Z04488431XG6QVH0F94T",
+    "Name": "giuliopulina.net."
   }
 }
