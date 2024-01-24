@@ -61,12 +61,12 @@ jobs:
       working-directory: application
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: todo-app
+        ECR_REPOSITORY: stratospheric-app
         DOCKER_IMAGE_TAG: ${{ steps.dockerImageTag.outputs.tag }}
       run: |
-        docker build -t todo-app .
-        docker tag todo-app $ECR_REGISTRY/$ECR_REPOSITORY:${DOCKER_IMAGE_TAG}
-        docker tag todo-app $ECR_REGISTRY/$ECR_REPOSITORY:latest
+        docker build -t stratospheric-app .
+        docker tag stratospheric-app $ECR_REGISTRY/$ECR_REPOSITORY:${DOCKER_IMAGE_TAG}
+        docker tag stratospheric-app $ECR_REGISTRY/$ECR_REPOSITORY:latest
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:${DOCKER_IMAGE_TAG}
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
         
