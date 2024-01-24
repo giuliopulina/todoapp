@@ -7,6 +7,7 @@ import software.amazon.awscdk.services.certificatemanager.Certificate;
 import software.amazon.awscdk.services.certificatemanager.CertificateValidation;
 import software.amazon.awscdk.services.cognito.*;
 import software.amazon.awscdk.services.ec2.*;
+import software.amazon.awscdk.services.ec2.InstanceType;
 import software.amazon.awscdk.services.ecr.IRepository;
 import software.amazon.awscdk.services.ecr.Repository;
 import software.amazon.awscdk.services.ecs.*;
@@ -233,7 +234,7 @@ public class MainAppStack extends Stack {
                         .build())
                 .engine(DatabaseInstanceEngine.postgres(
                         PostgresInstanceEngineProps.builder()
-                                .version(PostgresEngineVersion.VER_12_9)
+                                .version(PostgresEngineVersion.VER_12_17)
                                 .build()))
                 .instanceType(InstanceType.of(InstanceClass.BURSTABLE3, InstanceSize.MICRO))
                 .credentials(Credentials.fromSecret(databaseSecret))
