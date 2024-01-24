@@ -14,7 +14,7 @@ public class EcrRepositoryStack extends Stack {
     public EcrRepositoryStack(final Construct scope, final String id, final StackProps props, final EcrRepositoryParameters parameters) {
         super(scope, id, props);
 
-        final int maxImagesForEcrRepository = 10;
+        final int maxImagesForEcrRepository = 2;
         var ecrRepository = Repository.Builder.create(this, "ecrRepository")
                 .repositoryName(parameters.dockerRepositoryName())
                 .removalPolicy(RemovalPolicy.DESTROY)
