@@ -213,7 +213,8 @@ public class MainAppStack extends Stack {
     private DatabaseOutput setupPostgres(Vpc vpc) {
 
         final String username = "dbUser";
-        final String databaseName = "stratospheric-app";
+        //database name must only contain alphanumeric characters!
+        final String databaseName = "stratosphericapp";
 
         ISecret databaseSecret = Secret.Builder.create(this, "databaseSecret")
                 .secretName("DatabaseSecret")
@@ -241,7 +242,7 @@ public class MainAppStack extends Stack {
                 .allocatedStorage(20)
                 .maxAllocatedStorage(20)
                 .allowMajorVersionUpgrade(false)
-                .autoMinorVersionUpgrade(false)
+                .autoMinorVersionUpgrade(true)
                 .backupRetention(Duration.days(0))
                 .deleteAutomatedBackups(true)
                 // TODO: be careful with removal policy once data needs to be retained
@@ -260,6 +261,7 @@ public class MainAppStack extends Stack {
                 dbInstance.getInstanceIdentifier());
 
     }
+
 
     private CognitoOutput setupCognito(MainAppParameters parameters) {
 
