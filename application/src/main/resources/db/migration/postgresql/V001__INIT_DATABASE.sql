@@ -69,3 +69,4 @@ create table TODO_COLLABORATION_REQUEST
 	constraint FK_TODO_COLLABORATION_REQUEST_TODO
 		foreign key (TODO_ID) references TODO (ID)
 );
+

@@ -33,4 +33,6 @@ spring:
     username: stratospheric
     password: stratospheric
 custom:
+  sharing-queue: todo-sharing
   use-cognito-as-identity-provider: false
+  auto-confirm-collaborations: true

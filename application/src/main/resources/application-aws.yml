@@ -13,4 +13,6 @@ spring:
             issuerUri: ${COGNITO_PROVIDER_URL}
 
 custom:
-  use-cognito-as-identity-provider: true
+  sharing-queue: ${TODO_SHARING_QUEUE_NAME}
+  use-cognito-as-identity-provider: false
+  auto-confirm-collaborations: false

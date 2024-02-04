@@ -1,0 +1,9 @@
+* deploy with kubernetes instead of ecs
+
+* streamline deployment with a different environment / account? (for example, having local, dev, prod)
+
+* make the application more secure by not sharing parameter value but using parameter store
+  for example: cognito writes USER_POOL_CLIENT in SSM and the application resolve the value at runtime
+  with the proper aws provider
+
+* improve a bit the look and feel of the application that is horrible

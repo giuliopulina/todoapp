@@ -22,9 +22,14 @@ import software.amazon.awscdk.services.route53.*;
 import software.amazon.awscdk.services.secretsmanager.ISecret;
 import software.amazon.awscdk.services.secretsmanager.Secret;
 import software.amazon.awscdk.services.secretsmanager.SecretStringGenerator;
+import software.amazon.awscdk.services.sqs.DeadLetterQueue;
 import software.constructs.Construct;
+import software.amazon.awscdk.services.sqs.Queue;
 
-import java.util.*;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 import static java.util.Collections.singletonList;
 import static software.amazon.awscdk.services.ec2.SubnetType.PRIVATE_ISOLATED;
@@ -68,8 +73,7 @@ public class MainAppStack extends Stack {
 
         final CognitoOutput cognitoOutput = setupCognito(parameters);
         final DatabaseOutput databaseOutput = setupPostgres(vpc);
-
-        final Role ecsTaskRole = createEcsTaskRole(parameters, cognitoOutput);
+        final SQSOutput sqsOutput = setupSQS(parameters);
 
         IRepository ecrRepository = Repository.fromRepositoryName(this, "ecrRepository", parameters.dockerRepositoryName());
         ContainerImage image = RepositoryImage.fromEcrRepository(ecrRepository, parameters.dockerImageTag());
@@ -78,7 +82,8 @@ public class MainAppStack extends Stack {
         // Running in public subnet to avoid create the expensive NAT Gateway (
         //      assignPublicIp = true AND taskSubnets = PUBLIC
         // )
-        ApplicationLoadBalancedFargateService fargateService = createFargateService(parameters, cluster, certificateAndHostedZone, image, databaseOutput, cognitoOutput, ecsTaskRole);
+        ApplicationLoadBalancedFargateService fargateService = createFargateService(parameters, cluster, certificateAndHostedZone, image, databaseOutput, cognitoOutput, sqsOutput);
+        fargateService.getService().applyRemovalPolicy(RemovalPolicy.DESTROY);
 
         // Open port 443 inbound to IPs within VPC to allow network load balancer to connect to the service
         ISecurityGroup ecsSecurityGroup = fargateService.getService()
@@ -91,12 +96,38 @@ public class MainAppStack extends Stack {
         // allow ingress to database from ecs security group
         DatabaseInstance databaseInstance = databaseOutput.databaseInstance();
         databaseInstance.getConnections().allowFrom(ecsSecurityGroup, Port.tcp(5432), "Allow connection from ECS to Postgres on port 5432");
+    }
 
-        fargateService.getService().applyRemovalPolicy(RemovalPolicy.DESTROY);
+    private SQSOutput setupSQS(MainAppParameters parameters) {
+        Queue todoSharingDlq = Queue.Builder.create(this, "todoSharingDlq")
+                .queueName("todo-sharing-dead-letter-queue")
+                .retentionPeriod(Duration.days(14))
+                .build();
+        todoSharingDlq.applyRemovalPolicy(RemovalPolicy.DESTROY);
+
+        Queue todoSharingQueue = Queue.Builder.create(this, "todoSharingQueue")
+                .queueName("todo-sharing-queue")
+                .visibilityTimeout(Duration.seconds(30))
+                .retentionPeriod(Duration.days(14))
+                .deadLetterQueue(DeadLetterQueue.builder()
+                        .queue(todoSharingDlq)
+                        .maxReceiveCount(3)
+                        .build())
+                .build();
+
+        todoSharingQueue.applyRemovalPolicy(RemovalPolicy.DESTROY);
+
+        // to be exposed to Spring Boot application
+        String todoSharingQueueName = todoSharingQueue.getQueueName();
+
+        return new SQSOutput(todoSharingQueueName);
     }
 
     @NotNull
-    private ApplicationLoadBalancedFargateService createFargateService(MainAppParameters parameters, Cluster cluster, CertificateAndHostedZone certificateAndHostedZone, ContainerImage image, DatabaseOutput databaseOutput, CognitoOutput cognitoOutput, Role ecsTaskRole) {
+    private ApplicationLoadBalancedFargateService createFargateService(MainAppParameters parameters, Cluster cluster, CertificateAndHostedZone certificateAndHostedZone, ContainerImage image, DatabaseOutput databaseOutput, CognitoOutput cognitoOutput, SQSOutput sqsOutput) {
+
+        final Role ecsTaskRole = createEcsTaskRole(parameters, databaseOutput, cognitoOutput, sqsOutput);
+
         ApplicationLoadBalancedFargateService fargateService = new ApplicationLoadBalancedFargateService(
                 this,
                 "FargateService",
@@ -115,7 +146,7 @@ public class MainAppStack extends Stack {
                         .healthCheckGracePeriod(Duration.seconds(120))
                         .taskImageOptions(ApplicationLoadBalancedTaskImageOptions.builder()
                                 .image(image)
-                                .environment(appEnvironmentVariables(parameters, databaseOutput, cognitoOutput))
+                                .environment(appEnvironmentVariables(parameters, databaseOutput, cognitoOutput, sqsOutput))
                                 .containerPort(8080)
                                 .taskRole(ecsTaskRole)
                                 .build())
@@ -141,29 +172,43 @@ public class MainAppStack extends Stack {
     }
 
     @NotNull
-    private Role createEcsTaskRole(MainAppParameters parameters, CognitoOutput cognitoOutput) {
+    private Role createEcsTaskRole(MainAppParameters parameters, DatabaseOutput databaseOutput, CognitoOutput cognitoOutput, SQSOutput sqsOutput) {
         Role.Builder roleBuilder = Role.Builder.create(this, "ecsTaskRole")
                 .assumedBy(ServicePrincipal.Builder.create("ecs-tasks.amazonaws.com").build())
-                .path("/");
-
-        roleBuilder.inlinePolicies(Map.of(
-                    "ecsTaskRolePolicy",
-                    PolicyDocument.Builder.create()
-                            .statements(singletonList(
-                                    PolicyStatement.Builder.create()
-                                            .sid("AllowCreatingUsers")
-                                            .effect(Effect.ALLOW)
-                                            .resources(
-                                                    List.of(String.format("arn:aws:cognito-idp:%s:%s:userpool/%s", parameters.region(),
-                                                            parameters.accountId(), cognitoOutput.userPoolId()))
-                                            )
-                                            .actions(List.of("cognito-idp:AdminCreateUser"))
-                                            .build()
-                            ))
-                            .build()));
-
-        final Role ecsTaskRole = roleBuilder.build();
-        return ecsTaskRole;
+                .path("/")
+                .inlinePolicies(Map.of("ecsTaskRolePolicy",
+                        PolicyDocument.Builder.create()
+                                .statements(List.of(
+                                        PolicyStatement.Builder.create()
+                                                .sid("AllowCreatingUsers")
+                                                .effect(Effect.ALLOW)
+                                                .resources(
+                                                        List.of(String.format("arn:aws:cognito-idp:%s:%s:userpool/%s", parameters.region(),
+                                                                parameters.accountId(), cognitoOutput.userPoolId()))
+                                                )
+                                                .actions(List.of("cognito-idp:AdminCreateUser"))
+                                                .build(),
+                                        PolicyStatement.Builder.create()
+                                                .sid("AllowSQSAccess")
+                                                .effect(Effect.ALLOW)
+                                                .resources(List.of(
+                                                        String.format("arn:aws:sqs:%s:%s:%s", parameters.region(), parameters.accountId(),
+                                                                sqsOutput.queueName())
+                                                ))
+                                                .actions(Arrays.asList(
+                                                        "sqs:DeleteMessage",
+                                                        "sqs:GetQueueUrl",
+                                                        "sqs:ListDeadLetterSourceQueues",
+                                                        "sqs:ListQueues",
+                                                        "sqs:ListQueueTags",
+                                                        "sqs:ReceiveMessage",
+                                                        "sqs:SendMessage",
+                                                        "sqs:ChangeMessageVisibility",
+                                                        "sqs:GetQueueAttributes"))
+                                                .build()
+                                ))
+                                .build()));
+        return roleBuilder.build();
     }
 
     @NotNull
@@ -185,9 +230,9 @@ public class MainAppStack extends Stack {
     private record CertificateAndHostedZone(IHostedZone appHostedZone, Certificate appCertificate) {
     }
 
-    private Map<String, String> appEnvironmentVariables(MainAppParameters parameters, DatabaseOutput databaseOutput, CognitoOutput cognitoOutput) {
+    private Map<String, String> appEnvironmentVariables(MainAppParameters parameters, DatabaseOutput databaseOutput, CognitoOutput cognitoOutput, SQSOutput sqsOutput) {
 
-        final Map<String, String> vars = new HashMap<>();
+        final Map<String, String> vars = new java.util.HashMap<>();
         final ISecret credentials = databaseOutput.credentialsJson();
         vars.put("SPRING_DATASOURCE_URL",
                 String.format("jdbc:postgresql://%s:%s/%s",
@@ -206,7 +251,7 @@ public class MainAppStack extends Stack {
         vars.put("COGNITO_USER_POOL_ID", cognitoOutput.userPoolId());
         vars.put("COGNITO_LOGOUT_URL", cognitoOutput.logoutUrl());
         vars.put("COGNITO_PROVIDER_URL", cognitoOutput.providerUrl());
-
+        vars.put("TODO_SHARING_QUEUE_NAME", sqsOutput.queueName());
         return vars;
     }
 
@@ -325,4 +370,6 @@ public class MainAppStack extends Stack {
     }
 
     record DatabaseOutput(DatabaseInstance databaseInstance, String endpointAddress, String endpointPort, String dbName, ISecret credentialsJson, String instanceId) {}
+
+    record SQSOutput(String queueName) {}
 }
