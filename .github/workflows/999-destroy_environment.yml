@@ -1,4 +1,4 @@
-name: Build image and deploy to ECR
+name: Destroy environment (remove all stacks of the application)
 
 on:
   workflow_dispatch
@@ -18,7 +18,7 @@ jobs:
   
   build:
     
-    name: Build Image
+    name: Destroy AWS environment
     runs-on: ubuntu-latest
 
     steps:
