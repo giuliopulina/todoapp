@@ -163,10 +163,10 @@ public class MainAppStack extends Stack {
                         .interval(Duration.seconds(60))
                         .path("/")
                         .healthyThresholdCount(2)
-                        .unhealthyThresholdCount(2)
+                        .unhealthyThresholdCount(5)
                         .protocol(Protocol.HTTP)
                         .port("traffic-port")
-                        .timeout(Duration.seconds(10))
+                        .timeout(Duration.seconds(30))
                         .build());
         return fargateService;
     }

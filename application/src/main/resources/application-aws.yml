@@ -14,5 +14,5 @@ spring:
 
 custom:
   sharing-queue: ${TODO_SHARING_QUEUE_NAME}
-  use-cognito-as-identity-provider: false
+  use-cognito-as-identity-provider: true
   auto-confirm-collaborations: false
