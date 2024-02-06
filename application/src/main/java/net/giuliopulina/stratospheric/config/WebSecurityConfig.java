@@ -21,12 +21,10 @@ public class WebSecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity)
             throws Exception {
         httpSecurity
-                .csrf(csrf -> csrf.ignoringRequestMatchers(
-                        "/websocket/**"
-                ))
+                .csrf(Customizer.withDefaults())
                 .oauth2Login(Customizer.withDefaults())
                 .authorizeHttpRequests(httpRequests -> httpRequests
-                //.requestMatchers(EndpointRequest.to(HealthEndpoint.class)).permitAll()
+                 //.requestMatchers(EndpointRequest.to(HealthEndpoint.class)).permitAll()
                 .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                 .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                 .requestMatchers("/", "/register").permitAll()

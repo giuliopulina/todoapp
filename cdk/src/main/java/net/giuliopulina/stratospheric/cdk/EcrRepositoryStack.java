@@ -23,7 +23,7 @@ public class EcrRepositoryStack extends Stack {
                         .description("limit to " + maxImagesForEcrRepository + " images")
                         .maxImageCount(maxImagesForEcrRepository)
                         .build()))
-
+                .emptyOnDelete(true)
                 .build();
         ecrRepository.grantPullPush(new AccountPrincipal(parameters.accountId()));
         ecrRepository.applyRemovalPolicy(RemovalPolicy.DESTROY);

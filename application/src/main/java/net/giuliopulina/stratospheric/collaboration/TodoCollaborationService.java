@@ -9,6 +9,7 @@ import net.giuliopulina.stratospheric.todo.TodoRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -24,7 +25,7 @@ public class TodoCollaborationService {
   private final SqsTemplate sqsTemplate;
   private final String todoSharingQueueName;
 
-//  private final SimpMessagingTemplate simpMessagingTemplate;
+  private final SimpMessagingTemplate simpMessagingTemplate;
 
   private static final Logger LOG = LoggerFactory.getLogger(TodoCollaborationService.class.getName());
 
@@ -37,14 +38,14 @@ public class TodoCollaborationService {
     TodoRepository todoRepository,
     PersonRepository personRepository,
     TodoCollaborationRequestRepository todoCollaborationRequestRepository,
-    SqsTemplate sqsTemplate
-    /*SimpMessagingTemplate simpMessagingTemplate*/) {
+    SqsTemplate sqsTemplate,
+    SimpMessagingTemplate simpMessagingTemplate) {
     this.todoRepository = todoRepository;
     this.personRepository = personRepository;
     this.todoCollaborationRequestRepository = todoCollaborationRequestRepository;
     this.sqsTemplate = sqsTemplate;
     this.todoSharingQueueName = todoSharingQueueName;
-//    this.simpMessagingTemplate = simpMessagingTemplate;
+    this.simpMessagingTemplate = simpMessagingTemplate;
   }
 
   public String shareWithCollaborator(String todoOwnerEmail, Long todoId, Long collaboratorId) {
@@ -117,8 +118,7 @@ public class TodoCollaborationService {
       + ".";
     String ownerEmail = collaborationRequest.getTodo().getOwner().getEmail();
 
-    //TODO: commented out for MESSAGING
-    //simpMessagingTemplate.convertAndSend("/topic/todoUpdates/" + ownerEmail, subject + " " + message);
+    simpMessagingTemplate.convertAndSend("/topic/todoUpdates/" + ownerEmail, subject + " " + message);
 
     LOG.info("Successfully informed owner about accepted request.");
 

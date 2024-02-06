@@ -4,6 +4,13 @@ spring:
   hibernate:
     ddl-auto: validate
     open-in-view: false
+
+logging:
+  level:
+    org.springframework.web.socker.server: DEBUG
+    org.springframework.security.messaging.web.socket: DEBUG
+    org.springframework.messaging: DEBUG
+
 cloud:
   aws:
     stack:

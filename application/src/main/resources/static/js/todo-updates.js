@@ -1,10 +1,15 @@
 let stompClient = null;
 
-function connectToWebSocketEndpoint(email) {
+function connectToWebSocketEndpoint(email, csrfHeaderName, csrfTokenValue) {
   const socket = new SockJS('/websocket');
 
+  const headers = {};
+  headers[csrfHeaderName] = csrfTokenValue;
+  headers['X-CSRF-TOKEN'] = csrfTokenValue;
   stompClient = Stomp.over(socket);
-  stompClient.connect({}, () => {
+  stompClient.connect(headers, () => {
+    console.log("CLIENT SUBSCRIBED");
+
     stompClient.subscribe('/topic/todoUpdates', function (message) {
       $('#message').html(message.body);
       $('#toast').toast('show');
