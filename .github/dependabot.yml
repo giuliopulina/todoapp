@@ -1,0 +1,18 @@
+version: 2
+updates:
+  - package-ecosystem: "maven"
+    directory: "/application"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "maven"
+    directory: "/cdk"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "npm"
+    directory: "/cdk"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
