@@ -15,4 +15,5 @@ spring:
 custom:
   sharing-queue: ${TODO_SHARING_QUEUE_NAME}
   use-cognito-as-identity-provider: true
+#  autoconfirm for simplicity also in AWS
   auto-confirm-collaborations: true

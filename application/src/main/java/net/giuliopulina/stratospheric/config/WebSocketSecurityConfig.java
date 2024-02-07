@@ -16,7 +16,7 @@ public class WebSocketSecurityConfig {
 
        return messages
                 .anyMessage()
-                .permitAll()
+                .authenticated()
                 .build();
     }
 }

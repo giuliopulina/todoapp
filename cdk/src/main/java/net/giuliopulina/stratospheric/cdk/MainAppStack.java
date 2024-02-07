@@ -1,5 +1,6 @@
 package net.giuliopulina.stratospheric.cdk;
 
+import net.giuliopulina.stratospheric.cdk.construct.BreadcrumbsDynamoDbTable;
 import org.jetbrains.annotations.NotNull;
 import software.amazon.awscdk.*;
 import software.amazon.awscdk.Stack;
@@ -69,7 +70,7 @@ public class MainAppStack extends Stack {
         //cluster.enableFargateCapacityProviders();
         cluster.applyRemovalPolicy(RemovalPolicy.DESTROY);
 
-        CertificateAndHostedZone certificateAndHostedZone = createCerticateAndHostedZone(parameters);
+        CertificateAndHostedZone certificateAndHostedZone = createCertificateAndHostedZone(parameters);
 
         final CognitoOutput cognitoOutput = setupCognito(parameters);
         final DatabaseOutput databaseOutput = setupPostgres(vpc);
@@ -96,6 +97,11 @@ public class MainAppStack extends Stack {
         // allow ingress to database from ecs security group
         DatabaseInstance databaseInstance = databaseOutput.databaseInstance();
         databaseInstance.getConnections().allowFrom(ecsSecurityGroup, Port.tcp(5432), "Allow connection from ECS to Postgres on port 5432");
+
+        new BreadcrumbsDynamoDbTable(
+                this,
+                "BreadcrumbTable",
+                new BreadcrumbsDynamoDbTable.InputParameter("breadcrumb"));
     }
 
     private SQSOutput setupSQS(MainAppParameters parameters) {
@@ -212,7 +218,7 @@ public class MainAppStack extends Stack {
     }
 
     @NotNull
-    private MainAppStack.CertificateAndHostedZone createCerticateAndHostedZone(MainAppParameters parameters) {
+    private MainAppStack.CertificateAndHostedZone createCertificateAndHostedZone(MainAppParameters parameters) {
         IHostedZone hostedZone = HostedZone.fromLookup(this, "HostedZone", HostedZoneProviderProps.builder()
                 .domainName(parameters.hostedZoneDomain())
                 .build());

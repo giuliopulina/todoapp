@@ -1,24 +1,22 @@
 version: '3.3'
 
 services:
-  localstack:
-    image: localstack/localstack:0.14.4
-    ports:
-      - 4566:4566
-    environment:
-      - SERVICES=sqs
-      - DEFAULT_REGION=eu-west-2
-      - USE_SINGLE_REGION=true
-    volumes:
-      - ./src/test/resources/localstack/local-aws-infrastructure.sh:/docker-entrypoint-initaws.d/init.sh
   postgres:
-    image: postgres:12.17
+    image: postgres:12.9
     ports:
       - 5432:5432
     environment:
       - POSTGRES_USER=stratospheric
       - POSTGRES_PASSWORD=stratospheric
       - POSTGRES_DB=stratospheric
+  localstack:
+    image: localstack/localstack:3.1.0
+    ports:
+      - 4566:4566
+    environment:
+      - SERVICES=sqs,dynamodb
+    volumes:
+      - ./src/test/resources/localstack/local-aws-infrastructure.sh:/etc/localstack/init/ready.d/init.sh
   keycloak:
     image: quay.io/keycloak/keycloak:18.0.0-legacy
     ports:

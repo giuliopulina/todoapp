@@ -1,28 +1,33 @@
 package net.giuliopulina.stratospheric;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import net.giuliopulina.stratospheric.tracing.TracingEvent;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.security.Principal;
+
 @Controller
 public class IndexController {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final ApplicationEventPublisher eventPublisher;
+
+    public IndexController(ApplicationEventPublisher eventPublisher) {
+        this.eventPublisher = eventPublisher;
+    }
 
     @GetMapping
     @RequestMapping("/")
-    public String index(@AuthenticationPrincipal OidcUser user) {
-        if (user != null) {
-            logger.info("Authenticated user:" + user);
-        } else {
-            logger.info("User not authenticated");
-        }
+    public String getIndex(Principal principal) {
+        this.eventPublisher.publishEvent(
+                new TracingEvent(
+                        this,
+                        "index",
+                        principal != null ? principal.getName() : "anonymous"
+                )
+        );
 
         return "index";
     }
-
 }
