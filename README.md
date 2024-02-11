@@ -1,3 +1,5 @@
+# Description
+
 My rewritten version of the app described in the book [Stratospheric - From Zero to Production with Spring Boot and AWS](https://leanpub.com/stratospheric)
 
 Main differences with the original app:
