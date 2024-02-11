@@ -1,5 +1,3 @@
-* create another stack for websocket to experiment socket.io
-
 * deploy with kubernetes instead of ecs
 
 * streamline deployment with a different environment / account? (for example, having local, dev, prod)
