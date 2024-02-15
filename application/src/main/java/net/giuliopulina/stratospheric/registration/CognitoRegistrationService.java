@@ -2,6 +2,9 @@ package net.giuliopulina.stratospheric.registration;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import net.giuliopulina.stratospheric.collaboration.TodoCollaborationService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
@@ -13,6 +16,8 @@ import software.amazon.awssdk.services.cognitoidentityprovider.model.DeliveryMed
 @Service
 @ConditionalOnProperty(prefix = "custom", name = "use-cognito-as-identity-provider", havingValue = "true")
 public class CognitoRegistrationService implements RegistrationService {
+
+    private static final Logger LOG = LoggerFactory.getLogger(CognitoRegistrationService.class.getName());
 
     private final CognitoIdentityProviderClient cognitoIdentityProviderClient;
     private final MeterRegistry meterRegistry;
@@ -42,11 +47,16 @@ public class CognitoRegistrationService implements RegistrationService {
 
         cognitoIdentityProviderClient.adminCreateUser(registrationRequest);
 
-    Counter successCounter = Counter.builder("stratospheric.registration.signups")
-      .description("Number of user registrations")
-      .tag("outcome", "success")
-      .register(meterRegistry);
+        LOG.info("Incrementing counter stratospheric.registration.signups");
 
-    successCounter.increment();
+        Counter successCounter = Counter.builder("stratospheric.registration.signups")
+                .description("Number of user registrations")
+                .tag("outcome", "success")
+                .register(meterRegistry);
+
+        successCounter.increment();
+
+        LOG.info("Incremented counter stratospheric.registration.signups");
+
     }
 }
