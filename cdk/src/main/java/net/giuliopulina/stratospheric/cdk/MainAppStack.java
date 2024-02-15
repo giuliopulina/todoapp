@@ -77,6 +77,11 @@ public class MainAppStack extends Stack {
         final CognitoOutput cognitoOutput = setupCognito(parameters);
         final DatabaseOutput databaseOutput = setupPostgres(vpc);
         final SQSOutput sqsOutput = setupSQS(parameters);
+        final String dynamodbBreadcrumbTableName = parameters.applicationName() + "-breadcrumb";
+        new BreadcrumbsDynamoDbTable(
+                this,
+                "BreadcrumbTable",
+                new BreadcrumbsDynamoDbTable.InputParameter(dynamodbBreadcrumbTableName));
 
         IRepository ecrRepository = Repository.fromRepositoryName(this, "ecrRepository", parameters.dockerRepositoryName());
         ContainerImage image = RepositoryImage.fromEcrRepository(ecrRepository, parameters.dockerImageTag());
@@ -85,7 +90,7 @@ public class MainAppStack extends Stack {
         // Running in public subnet to avoid create the expensive NAT Gateway (
         //      assignPublicIp = true AND taskSubnets = PUBLIC
         // )
-        ApplicationLoadBalancedFargateService fargateService = createFargateService(parameters, cluster, certificateAndHostedZone, image, databaseOutput, cognitoOutput, sqsOutput);
+        ApplicationLoadBalancedFargateService fargateService = createFargateService(parameters, cluster, certificateAndHostedZone, image, databaseOutput, cognitoOutput, sqsOutput, dynamodbBreadcrumbTableName);
         fargateService.getService().applyRemovalPolicy(RemovalPolicy.DESTROY);
 
         // Open port 443 inbound to IPs within VPC to allow network load balancer to connect to the service
@@ -100,10 +105,7 @@ public class MainAppStack extends Stack {
         DatabaseInstance databaseInstance = databaseOutput.databaseInstance();
         databaseInstance.getConnections().allowFrom(ecsSecurityGroup, Port.tcp(5432), "Allow connection from ECS to Postgres on port 5432");
 
-        new BreadcrumbsDynamoDbTable(
-                this,
-                "BreadcrumbTable",
-                new BreadcrumbsDynamoDbTable.InputParameter("breadcrumb"));
+
     }
 
     private SQSOutput setupSQS(MainAppParameters parameters) {
@@ -132,9 +134,9 @@ public class MainAppStack extends Stack {
     }
 
     @NotNull
-    private ApplicationLoadBalancedFargateService createFargateService(MainAppParameters parameters, Cluster cluster, CertificateAndHostedZone certificateAndHostedZone, ContainerImage image, DatabaseOutput databaseOutput, CognitoOutput cognitoOutput, SQSOutput sqsOutput) {
+    private ApplicationLoadBalancedFargateService createFargateService(MainAppParameters parameters, Cluster cluster, CertificateAndHostedZone certificateAndHostedZone, ContainerImage image, DatabaseOutput databaseOutput, CognitoOutput cognitoOutput, SQSOutput sqsOutput, String dynamodbBreadcrumbTableName) {
 
-        final Role ecsTaskRole = createEcsTaskRole(parameters, databaseOutput, cognitoOutput, sqsOutput);
+        final Role ecsTaskRole = createEcsTaskRole(parameters, databaseOutput, cognitoOutput, sqsOutput, dynamodbBreadcrumbTableName);
 
         LogGroup logGroup = LogGroup.Builder.create(this, "ecsLogGroup")
                 .logGroupName("application-logs")
@@ -189,7 +191,7 @@ public class MainAppStack extends Stack {
     }
 
     @NotNull
-    private Role createEcsTaskRole(MainAppParameters parameters, DatabaseOutput databaseOutput, CognitoOutput cognitoOutput, SQSOutput sqsOutput) {
+    private Role createEcsTaskRole(MainAppParameters parameters, DatabaseOutput databaseOutput, CognitoOutput cognitoOutput, SQSOutput sqsOutput, String dynamodbBreadcrumbTableName) {
         Role.Builder roleBuilder = Role.Builder.create(this, "ecsTaskRole")
                 .assumedBy(ServicePrincipal.Builder.create("ecs-tasks.amazonaws.com").build())
                 .path("/")
@@ -227,7 +229,7 @@ public class MainAppStack extends Stack {
                                                 .sid("AllowDynamoDBAccess")
                                                 .effect(Effect.ALLOW)
                                                 .resources(
-                                                        List.of(String.format("arn:aws:dynamodb:%s:%s:table/%s", parameters.region(), parameters.accountId(), "breadcrumb"))
+                                                        List.of(String.format("arn:aws:dynamodb:%s:%s:table/%s", parameters.region(), parameters.accountId(), dynamodbBreadcrumbTableName))
                                                 )
                                                 .actions(List.of(
                                                         "dynamodb:Scan",

@@ -17,7 +17,7 @@ public class DynamoDbConfig {
             @Override
             public <T> String resolve(Class<T> clazz) {
                 String className = clazz.getSimpleName().replaceAll("(.)(\\p{Lu})", "$1_$2").toLowerCase(Locale.ROOT);
-                return /*environmentName + "-"  + */ applicationName  + "-" + className;
+                return applicationName + "-" + className;
             }
         };
     }
