@@ -180,7 +180,7 @@ public class MainAppStack extends Stack {
         targetGroup.enableCookieStickiness(Duration.minutes(30));
         targetGroup.configureHealthCheck(HealthCheck.builder()
                         .interval(Duration.seconds(60))
-                        .path("/actuator/health)")
+                        .path("/actuator/health")
                         .healthyThresholdCount(2)
                         .unhealthyThresholdCount(5)
                         .protocol(Protocol.HTTP)
