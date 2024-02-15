@@ -180,7 +180,7 @@ public class MainAppStack extends Stack {
         targetGroup.enableCookieStickiness(Duration.minutes(30));
         targetGroup.configureHealthCheck(HealthCheck.builder()
                         .interval(Duration.seconds(60))
-                        .path("/")
+                        .path("/actuator/health)")
                         .healthyThresholdCount(2)
                         .unhealthyThresholdCount(5)
                         .protocol(Protocol.HTTP)
@@ -239,6 +239,12 @@ public class MainAppStack extends Stack {
                                                         "dynamodb:BatchWriteItem",
                                                         "dynamodb:BatchWriteGet"
                                                 ))
+                                                .build(),
+                                        PolicyStatement.Builder.create()
+                                                .sid("AllowSendingMetricsToCloudWatch")
+                                                .effect(Effect.ALLOW)
+                                                .resources(singletonList("*")) // CloudWatch does not have any resource-level permissions, see https://stackoverflow.com/a/38055068/9085273
+                                                .actions(singletonList("cloudwatch:PutMetricData"))
                                                 .build()
                                 ))
                                 .build()));

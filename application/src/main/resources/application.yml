@@ -1,3 +1,17 @@
+management:
+  health:
+    jms:
+      enabled: false # don't verify the health of the JMS broker
+  cloudwatch:
+    metrics:
+      export:
+        enabled: true
+        namespace: stratospheric
+        step: 1m
+  metrics:
+    tags:
+      environment: test
+
 spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect

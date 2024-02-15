@@ -1,6 +1,5 @@
 package net.giuliopulina.stratospheric.cdk.construct;
 
-import net.giuliopulina.stratospheric.cdk.MainAppParameters;
 import software.amazon.awscdk.RemovalPolicy;
 import software.amazon.awscdk.services.dynamodb.*;
 import software.constructs.Construct;
@@ -26,6 +25,7 @@ public class BreadcrumbsDynamoDbTable extends Construct {
                         .removalPolicy(RemovalPolicy.DESTROY)
                         .build());
     }
+
     public record InputParameter(String tableName) {
     }
 }
