@@ -222,6 +222,21 @@ public class MainAppStack extends Stack {
                                                         "sqs:SendMessage",
                                                         "sqs:ChangeMessageVisibility",
                                                         "sqs:GetQueueAttributes"))
+                                                .build(),
+                                        PolicyStatement.Builder.create()
+                                                .sid("AllowDynamoDBAccess")
+                                                .effect(Effect.ALLOW)
+                                                .resources(
+                                                        List.of(String.format("arn:aws:dynamodb:%s:%s:table/%s", parameters.region(), parameters.accountId(), "breadcrumb"))
+                                                )
+                                                .actions(List.of(
+                                                        "dynamodb:Scan",
+                                                        "dynamodb:Query",
+                                                        "dynamodb:PutItem",
+                                                        "dynamodb:GetItem",
+                                                        "dynamodb:BatchWriteItem",
+                                                        "dynamodb:BatchWriteGet"
+                                                ))
                                                 .build()
                                 ))
                                 .build()));
