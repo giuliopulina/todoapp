@@ -18,6 +18,8 @@ import software.amazon.awscdk.services.elasticloadbalancingv2.ApplicationTargetG
 import software.amazon.awscdk.services.elasticloadbalancingv2.HealthCheck;
 import software.amazon.awscdk.services.elasticloadbalancingv2.Protocol;
 import software.amazon.awscdk.services.iam.*;
+import software.amazon.awscdk.services.logs.LogGroup;
+import software.amazon.awscdk.services.logs.RetentionDays;
 import software.amazon.awscdk.services.rds.*;
 import software.amazon.awscdk.services.route53.*;
 import software.amazon.awscdk.services.secretsmanager.ISecret;
@@ -134,6 +136,12 @@ public class MainAppStack extends Stack {
 
         final Role ecsTaskRole = createEcsTaskRole(parameters, databaseOutput, cognitoOutput, sqsOutput);
 
+        LogGroup logGroup = LogGroup.Builder.create(this, "ecsLogGroup")
+                .logGroupName("application-logs")
+                .retention(RetentionDays.ONE_DAY)
+                .removalPolicy(RemovalPolicy.DESTROY)
+                .build();
+
         ApplicationLoadBalancedFargateService fargateService = new ApplicationLoadBalancedFargateService(
                 this,
                 "FargateService",
@@ -155,6 +163,9 @@ public class MainAppStack extends Stack {
                                 .environment(appEnvironmentVariables(parameters, databaseOutput, cognitoOutput, sqsOutput))
                                 .containerPort(8080)
                                 .taskRole(ecsTaskRole)
+                                .logDriver(LogDriver.awsLogs(AwsLogDriverProps.builder()
+                                        .logGroup(logGroup)
+                                        .streamPrefix("stream").build()))
                                 .build())
                         .taskSubnets(SubnetSelection.builder()
                                 .subnetType(SubnetType.PUBLIC)
