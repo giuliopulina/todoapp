@@ -22,11 +22,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      
+
+    - name: Destroy app
+      working-directory: cdk
+      run: npm run app:destroy
+    
     - name: Destroy ECR
       working-directory: cdk
       run: npm run ecr-registry:destroy
         
-    - name: Destroy app
-      working-directory: cdk
-      run: npm run app:destroy
