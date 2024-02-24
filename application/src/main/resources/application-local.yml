@@ -1,5 +1,7 @@
 management:
   metrics:
+    enable:
+      stratospheric: false
     export:
       cloudwatch:
         enabled: false
