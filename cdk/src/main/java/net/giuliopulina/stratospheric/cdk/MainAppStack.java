@@ -1,6 +1,8 @@
 package net.giuliopulina.stratospheric.cdk;
 
 import net.giuliopulina.stratospheric.cdk.construct.BreadcrumbsDynamoDbTable;
+import net.giuliopulina.stratospheric.cdk.construct.Canaries;
+import net.giuliopulina.stratospheric.cdk.construct.CloudwatchAlerts;
 import org.jetbrains.annotations.NotNull;
 import software.amazon.awscdk.*;
 import software.amazon.awscdk.Stack;
@@ -86,12 +88,40 @@ public class MainAppStack extends Stack {
         IRepository ecrRepository = Repository.fromRepositoryName(this, "ecrRepository", parameters.dockerRepositoryName());
         ContainerImage image = RepositoryImage.fromEcrRepository(ecrRepository, parameters.dockerImageTag());
 
+        LogGroup applicationLogGroup = LogGroup.Builder.create(this, "ecsLogGroup")
+                .logGroupName("application-logs")
+                .retention(RetentionDays.ONE_DAY)
+                .removalPolicy(RemovalPolicy.DESTROY)
+                .build();
+
         // Use the ECS Network Load Balanced Fargate Service construct to create a ECS service.
         // Running in public subnet to avoid create the expensive NAT Gateway (
         //      assignPublicIp = true AND taskSubnets = PUBLIC
         // )
-        ApplicationLoadBalancedFargateService fargateService = createFargateService(parameters, cluster, certificateAndHostedZone, image, databaseOutput, cognitoOutput, sqsOutput, dynamodbBreadcrumbTableName);
+        ApplicationLoadBalancedFargateService fargateService = createFargateService(parameters,
+                cluster,
+                certificateAndHostedZone,
+                image,
+                databaseOutput,
+                cognitoOutput,
+                sqsOutput,
+                dynamodbBreadcrumbTableName,
+                applicationLogGroup);
         fargateService.getService().applyRemovalPolicy(RemovalPolicy.DESTROY);
+
+        new CloudwatchAlerts(this, "cloudwatchAlerts", new CloudwatchAlerts.InputParameters(
+                parameters.applicationName(),
+                fargateService.getLoadBalancer().getLoadBalancerName(),
+                parameters.region(),
+                "giuliopulina@gmail.com",
+                applicationLogGroup));
+
+        new Canaries(this, "canaries", new Canaries.InputParameters(
+                parameters.applicationName(),
+                parameters.region(),
+                parameters.applicationUrl(),
+                parameters.canaryUsername(),
+                parameters.canaryPassword()));
 
         // Open port 443 inbound to IPs within VPC to allow network load balancer to connect to the service
         ISecurityGroup ecsSecurityGroup = fargateService.getService()
@@ -99,24 +129,23 @@ public class MainAppStack extends Stack {
                 .getSecurityGroups()
                 .get(0);
 
-        ecsSecurityGroup.addIngressRule(Peer.ipv4(vpc.getVpcCidrBlock()), Port.tcp(443), "allow https inbound from vpc");
+        ecsSecurityGroup.addIngressRule(Peer.ipv4(vpc.getVpcCidrBlock()), Port.tcp(443), "Allow https inbound from vpc");
 
         // allow ingress to database from ecs security group
         DatabaseInstance databaseInstance = databaseOutput.databaseInstance();
         databaseInstance.getConnections().allowFrom(ecsSecurityGroup, Port.tcp(5432), "Allow connection from ECS to Postgres on port 5432");
 
-
     }
 
     private SQSOutput setupSQS(MainAppParameters parameters) {
         Queue todoSharingDlq = Queue.Builder.create(this, "todoSharingDlq")
-                .queueName("todo-sharing-dead-letter-queue")
+                .queueName(parameters.applicationName() + "-" + "todo-sharing-dead-letter-queue")
                 .retentionPeriod(Duration.days(14))
                 .build();
         todoSharingDlq.applyRemovalPolicy(RemovalPolicy.DESTROY);
 
         Queue todoSharingQueue = Queue.Builder.create(this, "todoSharingQueue")
-                .queueName("todo-sharing-queue")
+                .queueName(parameters.applicationName() + "-" + "todo-sharing-queue")
                 .visibilityTimeout(Duration.seconds(30))
                 .retentionPeriod(Duration.days(14))
                 .deadLetterQueue(DeadLetterQueue.builder()
@@ -134,15 +163,9 @@ public class MainAppStack extends Stack {
     }
 
     @NotNull
-    private ApplicationLoadBalancedFargateService createFargateService(MainAppParameters parameters, Cluster cluster, CertificateAndHostedZone certificateAndHostedZone, ContainerImage image, DatabaseOutput databaseOutput, CognitoOutput cognitoOutput, SQSOutput sqsOutput, String dynamodbBreadcrumbTableName) {
+    private ApplicationLoadBalancedFargateService createFargateService(MainAppParameters parameters, Cluster cluster, CertificateAndHostedZone certificateAndHostedZone, ContainerImage image, DatabaseOutput databaseOutput, CognitoOutput cognitoOutput, SQSOutput sqsOutput, String dynamodbBreadcrumbTableName, LogGroup applicationLogGroup) {
 
         final Role ecsTaskRole = createEcsTaskRole(parameters, databaseOutput, cognitoOutput, sqsOutput, dynamodbBreadcrumbTableName);
-
-        LogGroup logGroup = LogGroup.Builder.create(this, "ecsLogGroup")
-                .logGroupName("application-logs")
-                .retention(RetentionDays.ONE_DAY)
-                .removalPolicy(RemovalPolicy.DESTROY)
-                .build();
 
         ApplicationLoadBalancedFargateService fargateService = new ApplicationLoadBalancedFargateService(
                 this,
@@ -166,7 +189,7 @@ public class MainAppStack extends Stack {
                                 .containerPort(8080)
                                 .taskRole(ecsTaskRole)
                                 .logDriver(LogDriver.awsLogs(AwsLogDriverProps.builder()
-                                        .logGroup(logGroup)
+                                        .logGroup(applicationLogGroup)
                                         .streamPrefix("stream").build()))
                                 .build())
                         .taskSubnets(SubnetSelection.builder()

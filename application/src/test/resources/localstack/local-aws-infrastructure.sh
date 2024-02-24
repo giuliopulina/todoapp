@@ -1,6 +1,6 @@
 #!/bin/sh
 
-awslocal sqs create-queue --queue-name todo-sharing --region eu-west-2
+awslocal sqs create-queue --queue-name stratospheric-app-todo-sharing-queue --region eu-west-2
 
 awslocal dynamodb create-table \
     --table-name stratospheric-app-breadcrumb \

@@ -35,10 +35,21 @@ public class MainApp {
         String springProfile = (String) app.getNode().tryGetContext("springProfile");
         Validations.requireNonEmpty(springProfile, "context variable 'springProfile' must not be null");
 
+        String canaryUsername = (String) app.getNode().tryGetContext("canaryUsername");
+        Validations.requireNonEmpty(canaryUsername, "context variable 'canaryUsername' must not be null");
+
+        String canaryUserPassword = (String) app.getNode().tryGetContext("canaryUserPassword");
+        Validations.requireNonEmpty(canaryUserPassword, "context variable 'canaryUserPassword' must not be null");
+
+        String applicationUrl = (String) app.getNode().tryGetContext("applicationUrl");
+        Validations.requireNonEmpty(applicationUrl, "context variable 'applicationUrl' must not be null");
+
         Environment awsEnvironment = makeEnv(accountId, region);
 
         MainAppParameters parameters = new MainAppParameters(accountId, region, applicationName, hostedZoneDomain,
-                applicationDomain, loginPageDomainPrefix, dockerRepository, dockerImageTag, springProfile);
+                applicationDomain, loginPageDomainPrefix,
+                dockerRepository, dockerImageTag, springProfile,
+                canaryUsername, canaryUserPassword, applicationUrl);
 
         new MainAppStack(app, "ApplicationStack", StackProps
                 .builder()

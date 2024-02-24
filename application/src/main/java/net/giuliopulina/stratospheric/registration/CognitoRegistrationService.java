@@ -2,7 +2,6 @@ package net.giuliopulina.stratospheric.registration;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
-import net.giuliopulina.stratospheric.collaboration.TodoCollaborationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;

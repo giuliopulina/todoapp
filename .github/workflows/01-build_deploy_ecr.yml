@@ -74,4 +74,4 @@ jobs:
         
     - name: Deploy app
       working-directory: cdk
-      run: npm run app:deploy -- -c dockerImageTag=${{ steps.dockerImageTag.outputs.tag }}
+      run: npm run app:deploy -- -c dockerImageTag=${{ steps.dockerImageTag.outputs.tag }} -c canaryUserPassword=${{ secrets.CANARY_USER_PASSWORD }}

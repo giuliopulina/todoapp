@@ -22,6 +22,9 @@
     "dockerRepositoryName": "stratospheric-app",
     "dockerImageTag": "DYNAMICALLY_OVERRIDDEN_BY_WORKFLOW",
     "springProfile": "aws",
+    "applicationUrl": "https://stratospheric-app.giuliopulina.net",
+    "canaryUsername": "canary",
+    "canaryUserPassword": "SECRET_OVERRIDDEN_BY_WORKFLOW",
     "@aws-cdk/aws-lambda:recognizeLayerVersion": true,
     "@aws-cdk/core:checkSecretUsage": true,
     "@aws-cdk/core:target-partitions": [

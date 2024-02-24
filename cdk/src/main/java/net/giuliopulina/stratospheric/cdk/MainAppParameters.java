@@ -9,5 +9,8 @@ public record MainAppParameters(
         String loginPageDomainPrefix,
         String dockerRepositoryName,
         String dockerImageTag,
-
-        String springProfile) { }
+        String springProfile,
+        String canaryUsername,
+        String canaryPassword,
+        String applicationUrl) {
+}
