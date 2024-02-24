@@ -19,120 +19,120 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequestMapping("/todo")
 public class TodoController {
 
-  private static final Logger logger = LoggerFactory.getLogger(TodoController.class);
+    private static final Logger logger = LoggerFactory.getLogger(TodoController.class);
 
-  private final TodoService todoService;
+    private final TodoService todoService;
 
-  public TodoController(
-    TodoService todoService) {
-    this.todoService = todoService;
-  }
-
-  @GetMapping("/show/{id}")
-  public String showView(
-    @AuthenticationPrincipal OidcUser user,
-    @PathVariable("id") long id,
-    Model model
-  ) {
-
-    Todo todo = todoService.getOwnedOrSharedTodo(id, user.getEmail());
-
-    model.addAttribute("todo", todo);
-
-    MDC.put("todoId", String.valueOf(id));
-    logger.info("Showing todo with id {}", id);
-
-    return "todo/show";
-  }
-
-  @GetMapping("/add")
-  public String addView(Model model) {
-    model.addAttribute("todo", new Todo());
-    model.addAttribute("editMode", EditMode.CREATE);
-
-    return "todo/edit";
-  }
-
-  @PostMapping
-  public String add(
-    @Valid Todo toBeCreatedTodo,
-    BindingResult bindingResult,
-    @AuthenticationPrincipal OidcUser user,
-    Model model,
-    RedirectAttributes redirectAttributes
-  ) {
-    if (bindingResult.hasErrors()) {
-      model.addAttribute("todo", toBeCreatedTodo);
-      model.addAttribute("editMode", EditMode.CREATE);
-
-      return "todo/edit";
+    public TodoController(
+            TodoService todoService) {
+        this.todoService = todoService;
     }
 
-    Todo savedTodo = todoService.saveNewTodo(toBeCreatedTodo, user.getEmail(), user.getAttribute("name"));
+    @GetMapping("/show/{id}")
+    public String showView(
+            @AuthenticationPrincipal OidcUser user,
+            @PathVariable("id") long id,
+            Model model
+    ) {
 
-    redirectAttributes.addFlashAttribute("message", "Your new todo has been successfully saved.");
-    redirectAttributes.addFlashAttribute("messageType", "success");
-    redirectAttributes.addFlashAttribute("todoId", savedTodo.getId());
+        Todo todo = todoService.getOwnedOrSharedTodo(id, user.getEmail());
 
-    logger.info("Successfully created todo");
+        model.addAttribute("todo", todo);
 
-    return "redirect:/dashboard";
-  }
+        MDC.put("todoId", String.valueOf(id));
+        logger.info("Showing todo with id {}", id);
 
-  @GetMapping("/edit/{id}")
-  public String editView(
-    @AuthenticationPrincipal OidcUser user,
-    @PathVariable("id") long id,
-    Model model
-  ) {
-    Todo todo = todoService.getOwnedOrSharedTodo(id, user.getEmail());
-
-    model.addAttribute("todo", todo);
-    model.addAttribute("editMode", EditMode.UPDATE);
-
-    return "todo/edit";
-  }
-
-  @PostMapping("/update/{id}")
-  public String update(
-    @AuthenticationPrincipal OidcUser user,
-    @PathVariable("id") long id,
-    @Valid Todo updatedTodo,
-    BindingResult result,
-    Model model,
-    RedirectAttributes redirectAttributes
-  ) {
-    if (result.hasErrors()) {
-      model.addAttribute("todo", updatedTodo);
-      model.addAttribute("editMode", EditMode.UPDATE);
-
-      return "todo/edit";
+        return "todo/show";
     }
 
-    todoService.updateTodo(updatedTodo, id, user.getEmail());
+    @GetMapping("/add")
+    public String addView(Model model) {
+        model.addAttribute("todo", new Todo());
+        model.addAttribute("editMode", EditMode.CREATE);
 
-    redirectAttributes.addFlashAttribute("message", "Your todo was successfully updated.");
-    redirectAttributes.addFlashAttribute("messageType", "success");
+        return "todo/edit";
+    }
 
-    logger.info("successfully updated todo");
+    @PostMapping
+    public String add(
+            @Valid Todo toBeCreatedTodo,
+            BindingResult bindingResult,
+            @AuthenticationPrincipal OidcUser user,
+            Model model,
+            RedirectAttributes redirectAttributes
+    ) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("todo", toBeCreatedTodo);
+            model.addAttribute("editMode", EditMode.CREATE);
 
-    return "redirect:/dashboard";
-  }
+            return "todo/edit";
+        }
 
-  @GetMapping("/delete/{id}")
-  public String delete(
-    @AuthenticationPrincipal OidcUser user,
-    @PathVariable("id") long id,
-    RedirectAttributes redirectAttributes
-  ) {
+        Todo savedTodo = todoService.saveNewTodo(toBeCreatedTodo, user.getEmail(), user.getAttribute("name"));
 
-    todoService.delete(id, user.getEmail());
+        redirectAttributes.addFlashAttribute("message", "Your new todo has been successfully saved.");
+        redirectAttributes.addFlashAttribute("messageType", "success");
+        redirectAttributes.addFlashAttribute("todoId", savedTodo.getId());
 
-    redirectAttributes.addFlashAttribute("message", "Your todo has been be deleted.");
-    redirectAttributes.addFlashAttribute("messageType", "success");
+        logger.info("Successfully created todo");
 
-    logger.info("successfully deleted todo");
+        return "redirect:/dashboard";
+    }
 
-    return "redirect:/dashboard";
-  }
+    @GetMapping("/edit/{id}")
+    public String editView(
+            @AuthenticationPrincipal OidcUser user,
+            @PathVariable("id") long id,
+            Model model
+    ) {
+        Todo todo = todoService.getOwnedOrSharedTodo(id, user.getEmail());
+
+        model.addAttribute("todo", todo);
+        model.addAttribute("editMode", EditMode.UPDATE);
+
+        return "todo/edit";
+    }
+
+    @PostMapping("/update/{id}")
+    public String update(
+            @AuthenticationPrincipal OidcUser user,
+            @PathVariable("id") long id,
+            @Valid Todo updatedTodo,
+            BindingResult result,
+            Model model,
+            RedirectAttributes redirectAttributes
+    ) {
+        if (result.hasErrors()) {
+            model.addAttribute("todo", updatedTodo);
+            model.addAttribute("editMode", EditMode.UPDATE);
+
+            return "todo/edit";
+        }
+
+        todoService.updateTodo(updatedTodo, id, user.getEmail());
+
+        redirectAttributes.addFlashAttribute("message", "Your todo was successfully updated.");
+        redirectAttributes.addFlashAttribute("messageType", "success");
+
+        logger.info("successfully updated todo");
+
+        return "redirect:/dashboard";
+    }
+
+    @GetMapping("/delete/{id}")
+    public String delete(
+            @AuthenticationPrincipal OidcUser user,
+            @PathVariable("id") long id,
+            RedirectAttributes redirectAttributes
+    ) {
+
+        todoService.delete(id, user.getEmail());
+
+        redirectAttributes.addFlashAttribute("message", "Your todo has been be deleted.");
+        redirectAttributes.addFlashAttribute("messageType", "success");
+
+        logger.info("successfully deleted todo");
+
+        return "redirect:/dashboard";
+    }
 }

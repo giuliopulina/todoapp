@@ -1,17 +1,17 @@
 package net.giuliopulina.stratospheric.todo;
 
 public enum Priority {
-  HIGH(1),
-  DEFAULT(2),
-  LOW(3);
+    HIGH(1),
+    DEFAULT(2),
+    LOW(3);
 
-  private final int displayValue;
+    private final int displayValue;
 
-  Priority(int displayValue) {
-    this.displayValue = displayValue;
-  }
+    Priority(int displayValue) {
+        this.displayValue = displayValue;
+    }
 
-  public int getDisplayValue() {
-    return displayValue;
-  }
+    public int getDisplayValue() {
+        return displayValue;
+    }
 }

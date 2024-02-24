@@ -13,22 +13,22 @@ import java.util.List;
 @RequestMapping("/dashboard")
 public class DashboardController {
 
-  private final DashboardService dashboardService;
+    private final DashboardService dashboardService;
 
-  public DashboardController(DashboardService dashboardService) {
-    this.dashboardService = dashboardService;
-  }
-
-
-  @GetMapping
-  public String getDashboard(Model model, @AuthenticationPrincipal OidcUser user) {
-    model.addAttribute("collaborators", List.of());
-
-    if (user != null) {
-      model.addAttribute("collaborators", dashboardService.getAvailableCollaborators(user.getEmail()));
-      model.addAttribute("todos", dashboardService.getAllOwnedAndSharedTodos(user.getEmail()));
+    public DashboardController(DashboardService dashboardService) {
+        this.dashboardService = dashboardService;
     }
 
-    return "dashboard";
-  }
+
+    @GetMapping
+    public String getDashboard(Model model, @AuthenticationPrincipal OidcUser user) {
+        model.addAttribute("collaborators", List.of());
+
+        if (user != null) {
+            model.addAttribute("collaborators", dashboardService.getAvailableCollaborators(user.getEmail()));
+            model.addAttribute("todos", dashboardService.getAllOwnedAndSharedTodos(user.getEmail()));
+        }
+
+        return "dashboard";
+    }
 }

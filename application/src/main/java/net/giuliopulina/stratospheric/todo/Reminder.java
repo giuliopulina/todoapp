@@ -12,27 +12,27 @@ import java.time.LocalDate;
 @Entity
 public class Reminder {
 
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-  @NotEmpty
-  @DateTimeFormat(pattern = "yyyy-MM-dd")
-  private LocalDate dueDate;
+    @NotEmpty
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    private LocalDate dueDate;
 
-  public Long getId() {
-    return id;
-  }
+    public Long getId() {
+        return id;
+    }
 
-  public void setId(Long id) {
-    this.id = id;
-  }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-  public LocalDate getDueDate() {
-    return dueDate;
-  }
+    public LocalDate getDueDate() {
+        return dueDate;
+    }
 
-  public void setDueDate(LocalDate dueDate) {
-    this.dueDate = dueDate;
-  }
+    public void setDueDate(LocalDate dueDate) {
+        this.dueDate = dueDate;
+    }
 }
