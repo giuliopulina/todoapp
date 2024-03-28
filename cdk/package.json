@@ -3,9 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "bootstrap": "cdk bootstrap --app \"./mvnw -e -q compile exec:java -Dexec.mainClass=net.giuliopulina.stratospheric.cdk.BootstrapApp\"",
+    "bootstrap": "cdk bootstrap --app \"mvn -e -q compile exec:java -Dexec.mainClass=net.giuliopulina.stratospheric.cdk.BootstrapApp\"",
+    "bootstrap:synth": "cdk synth --app \"mvn -e -q compile exec:java -Dexec.mainClass=net.giuliopulina.stratospheric.cdk.BootstrapApp\"",
     "ecr-registry:deploy": "cdk deploy --app \"mvn -e -q clean compile exec:java -Dexec.mainClass=net.giuliopulina.stratospheric.cdk.EcrRepositoryApp\" --require-approval never",
     "ecr-registry:destroy": "cdk destroy --app \"mvn -e -q clean compile exec:java -Dexec.mainClass=net.giuliopulina.stratospheric.cdk.EcrRepositoryApp\" --force --require-approval never",
+    "app:synth": "cdk synth --app \"mvn -e -q clean compile exec:java -Dexec.mainClass=net.giuliopulina.stratospheric.cdk.MainApp\" --require-approval never",
     "app:deploy": "cdk deploy --app \"mvn -e -q clean compile exec:java -Dexec.mainClass=net.giuliopulina.stratospheric.cdk.MainApp\" --require-approval never",
     "app:destroy": "cdk destroy --app \"mvn -e -q clean compile exec:java -Dexec.mainClass=net.giuliopulina.stratospheric.cdk.MainApp\" --force --require-approval never"
   },
@@ -13,6 +15,6 @@
     "aws-cdk": "2.134.0"
   },
   "engines": {
-    "node": ">=16"
+    "node": ">20"
   }
 }
