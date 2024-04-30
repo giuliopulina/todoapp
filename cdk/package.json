@@ -12,7 +12,7 @@
     "app:destroy": "cdk destroy --app \"mvn -e -q clean compile exec:java -Dexec.mainClass=net.giuliopulina.stratospheric.cdk.MainApp\" --force --require-approval never"
   },
   "devDependencies": {
-    "aws-cdk": "2.139.0"
+    "aws-cdk": "2.139.1"
   },
   "engines": {
     "node": ">20"
