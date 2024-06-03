@@ -38,6 +38,6 @@ jobs:
       - run: java -version
       - run: mvn -version
       - name: Build application with Maven
-        run: mvn -B verify --file application/pom.xml
+        run: mvn -B -q verify --file application/pom.xml
       - name: Build cdk with Maven
-        run: mvn -B verify --file cdk/pom.xml
+        run: mvn -B -q verify --file cdk/pom.xml
