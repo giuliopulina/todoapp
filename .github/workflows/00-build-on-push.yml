@@ -1,0 +1,42 @@
+name: Build on push
+
+on:
+  pull_request:
+    branches:
+      - master
+      - 'feature/**'
+      - 'bugfix/**'
+  push:
+    branches:
+      - master
+      - 'feature/**'
+      - 'bugfix/**'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: ['17', '21' ]
+        maven: ['3.9.6']
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup java
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: 'temurin'
+      - uses: stCarolas/setup-maven@v5
+        with:
+          maven-version: ${{ matrix.maven }}
+      - uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-jdk-${{ matrix.java }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-jdk-${{ matrix.java }}-maven-
+      - run: java -version
+      - run: mvn -version
+      - name: Build application with Maven
+        run: mvn -B verify --file application/pom.xml
+      - name: Build cdk with Maven
+        run: mvn -B verify --file cdk/pom.xml
