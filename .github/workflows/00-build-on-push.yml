@@ -38,7 +38,9 @@ jobs:
             ${{ runner.os }}-jdk-${{ matrix.java }}-maven-
       - run: java -version
       - run: mvn -version
-      - name: Build application with Maven
+      - name: Run mvn verify on application
         run: mvn -B -q verify --file application/pom.xml
-      - name: Build cdk with Maven
+      - name: Run integrationTest on application
+        run: mvn -B -q -Dspring-boot.run.profiles=local,integrationTest verify --file application/pom.xml
+      - name: Run mvn verify on cdk
         run: mvn -B -q verify --file cdk/pom.xml

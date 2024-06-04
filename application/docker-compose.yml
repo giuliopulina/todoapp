@@ -2,7 +2,7 @@ version: '3.3'
 
 services:
   postgres:
-    image: postgres:12.9
+    image: postgres:16.3
     ports:
       - "5432:5432"
     environment:
@@ -10,7 +10,7 @@ services:
       - POSTGRES_PASSWORD=stratospheric
       - POSTGRES_DB=stratospheric
   localstack:
-    image: localstack/localstack:3.1.0
+    image: localstack/localstack:3.2.0
     ports:
       - "4566:4566"
     environment:
@@ -18,13 +18,13 @@ services:
     volumes:
       - ./src/test/resources/localstack/local-aws-infrastructure.sh:/etc/localstack/init/ready.d/init.sh
   keycloak:
-    image: quay.io/keycloak/keycloak:18.0.0-legacy
+    image: quay.io/keycloak/keycloak:24.0.5
     ports:
       - "8888:8080"
     environment:
-      - KEYCLOAK_USER=keycloak
-      - KEYCLOAK_PASSWORD=keycloak
+      - KEYCLOAK_ADMIN=keycloak
+      - KEYCLOAK_ADMIN_PASSWORD=keycloak
       - DB_VENDOR=h2
-      - JAVA_OPTS=-Dkeycloak.migration.action=import -Dkeycloak.migration.provider=singleFile -Dkeycloak.migration.file=/tmp/stratospheric-realm.json
+    command: start-dev --import-realm
     volumes:
-      - ./src/test/resources/keycloak/stratospheric-realm.json:/tmp/stratospheric-realm.json
+      - ./src/test/resources/keycloak/stratospheric-realm.json:/opt/keycloak/data/import/stratospheric-realm.json

@@ -25,9 +25,8 @@ public class WebSecurityConfig {
         httpSecurity
                 .csrf(Customizer.withDefaults())
                 .oauth2Login(Customizer.withDefaults())
-                .authorizeHttpRequests(httpRequests -> httpRequests
+                .authorizeHttpRequests((authz) -> authz
                         .requestMatchers(EndpointRequest.to(HealthEndpoint.class)).permitAll()
-                        .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                         .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                         .requestMatchers("/", "/register").permitAll()
                         .anyRequest().authenticated())

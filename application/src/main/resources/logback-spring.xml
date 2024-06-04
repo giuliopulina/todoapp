@@ -8,10 +8,21 @@
         <encoder class="de.siegmar.logbackawslogsjsonencoder.AwsJsonLogEncoder"/>
     </appender>
 
+    <appender name="JSON" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="de.siegmar.logbackawslogsjsonencoder.AwsJsonLogEncoder"/>
+    </appender>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
     <springProfile name="local">
         <root level="INFO">
-            <appender-ref ref="JSON"/>
+            <appender-ref ref="STDOUT"/>
         </root>
+        <logger name="org.springframework.security" level="DEBUG" />
         <logger name="org.springframework.messaging.simp.stomp.StompBrokerRelayMessageHandler" level="INFO"/>
         <logger name="org.springframework.web.SimpLogging" level="INFO"/>
         <logger name="org.springframework.web.socket.config.WebSocketMessageBrokerStats" level="WARN"/>

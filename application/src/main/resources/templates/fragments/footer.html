@@ -9,8 +9,7 @@
 
     <p class="col-md-8 d-flex align-items-center justify-content-center mb-3 mb-md-0 me-md-auto text-muted">
       Java: [[${@environment.getProperty('java.version')}]] - Spring Boot: [[${T(org.springframework.boot.SpringBootVersion).getVersion}]] -
-      [[${@gitProperties.getBranch()}]] -&nbsp;<a class="text-muted" th:href="@{https://github.com/stratospheric-dev/stratospheric/commit/{id}(id=${@gitProperties.getCommitId()})}">[[${@gitProperties.getShortCommitId()}]]</a> &nbsp;-
-      [[${@gitProperties.getCommitTime().toString()}]]
+      [[${@gitProperties.getCommitId()}]]
     </p>
 
     <ul class="nav col-md-2 justify-content-end">

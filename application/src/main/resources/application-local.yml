@@ -17,6 +17,9 @@ spring:
       endpoint: http://localhost:4566
       region:
         static: eu-west-2
+      cloudwatch:
+        enabled: false
+  
   thymeleaf:
     cache: false
     prefix: file:src/main/resources/templates/
@@ -35,7 +38,7 @@ spring:
             scope: openid
         provider:
           cognito:
-            issuerUri: http://localhost:8888/auth/realms/stratospheric
+            issuerUri: http://localhost:8888/realms/stratospheric
   datasource:
     url: jdbc:postgresql://localhost:5432/stratospheric
     username: stratospheric
