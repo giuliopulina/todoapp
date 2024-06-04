@@ -41,6 +41,6 @@ jobs:
       - name: Run mvn verify on application
         run: mvn -B -q verify --file application/pom.xml
       - name: Run integrationTest on application
-        run: mvn -B -q -Dspring-boot.run.profiles=local,integrationTest verify --file application/pom.xml
+        run: mvn -B -q -DintegrationTest verify --file application/pom.xml
       - name: Run mvn verify on cdk
         run: mvn -B -q verify --file cdk/pom.xml
